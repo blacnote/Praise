@@ -446,6 +446,36 @@
   }
   .flow-panel .flow-state .moment.hide{display:none}
 
+  /* ============== IN-EAR MONITOR (Team Ears) ============== */
+  .earmon .earchips{gap:10px;flex-wrap:wrap;margin:14px 0 4px}
+  .earchip{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:8px 14px;border-radius:999px;
+    border:1px solid var(--line);background:rgba(8,12,22,0.55);
+    font-size:12px;font-weight:600;letter-spacing:0.3px;color:var(--ink-dim);
+    transition:all 0.16s ease;
+  }
+  .earchip.on{border-color:var(--cyan);color:var(--ink);box-shadow:0 0 0 1px rgba(127,227,242,0.25) inset}
+  .earchip.house{border-color:rgba(95,210,228,0.30)}
+  .earcue{
+    margin-top:10px;padding:10px 14px;border-radius:10px;
+    background:rgba(8,12,22,0.55);border:1px solid var(--line);
+    font-size:13px;letter-spacing:0.3px;color:var(--cyan);font-weight:600;
+    font-variant-numeric:tabular-nums;
+  }
+  .earnote{margin-top:10px;color:var(--ink-dim);font-style:italic;line-height:1.5}
+  .earlock{
+    font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;
+    padding:5px 12px;border-radius:999px;flex:none;white-space:nowrap;
+    border:1px solid var(--line);color:var(--ink-dim);background:rgba(8,12,22,0.5);
+  }
+  .earlock.ready,.earlock.live{border-color:rgba(95,210,228,0.45);color:var(--cyan)}
+  .earlock.locked{
+    border-color:transparent;color:#031820;
+    background:linear-gradient(90deg, var(--cyan), var(--gold));
+    box-shadow:0 0 16px -4px var(--gold-glow);
+  }
+
   /* ============== ROUTING ============== */
   .route{
     display:flex;align-items:center;gap:14px;
@@ -732,12 +762,31 @@
         <button class="btn big" onclick="stopAll()">■ Stop</button>
         <div style="flex:1"></div>
         <label style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink-dim)">
-          <input type="checkbox" id="optSpeak" checked style="width:auto;margin-right:4px"> Spoken guide
+          <input type="checkbox" id="optSpeak" checked onchange="updateEars()" style="width:auto;margin-right:4px"> Spoken guide
         </label>
         <label style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink-dim)">
-          <input type="checkbox" id="optClick" checked style="width:auto;margin-right:4px"> Click
+          <input type="checkbox" id="optClick" checked onchange="updateEars()" style="width:auto;margin-right:4px"> Click
         </label>
       </div>
+    </div>
+
+    <!-- IN-EAR MONITOR — Team Ears foundation (status, not hardware routing) -->
+    <div class="panel earmon" id="earMon">
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="eyebrow">Team Ears · In-Ear Monitor</div>
+          <strong style="font-size:15px">What the team hears</strong>
+        </div>
+        <span class="earlock" id="earLock">Standby</span>
+      </div>
+      <div class="row earchips">
+        <span class="earchip" id="chipClick"><span class="led" id="ledClick"></span>Click</span>
+        <span class="earchip" id="chipGuide"><span class="led" id="ledGuide"></span>Guide cue</span>
+        <span class="earchip house"><span class="led on"></span>House → worship (clean)</span>
+      </div>
+      <div class="earcue" id="earCue">Cue: —</div>
+      <div class="small earnote">Foundation — monitor status only. Routes into your existing in-ear
+        system; no separate audio bus or custom hardware yet.</div>
     </div>
 
     <!-- SPIRIT FLOW — elevated, sacred -->
@@ -816,6 +865,10 @@
         Phase 1 routes into the church's <b>existing</b> monitor / in-ear system — no custom hardware.
         Musicians, background singers, and lead singers hear click + guide in their ears.
         The stereo bounce is the simple, safe fallback: one clean L/R pair into any console.
+      </div>
+      <div class="small" style="margin-top:10px;color:var(--ink-dim);font-style:italic">
+        Honesty note: this build currently uses a single browser audio output — the House / Team
+        separation shown here is the <b>design concept</b>, not real per-output bus routing yet.
       </div>
     </div>
 
@@ -1079,7 +1132,7 @@ function startPlay(){
   counting=true; countLeft=4; startClick(curSongObj().bpm);
   $("nowCue").textContent="Count-in… 4";
   lastTick=performance.now(); loop();
-  speak("Count in");
+  speak("Count in"); updateEars();
 }
 function pausePlay(){ playing=false; $("btnPlay").textContent="▶ Resume"; stopClick();
   if(rafId)cancelAnimationFrame(rafId); }
@@ -1090,7 +1143,7 @@ function stopAll(){
   $("ledEar").classList.remove("ear"); $("ledHouse").classList.remove("on");
   $("ppLed").classList.remove("on"); $("ppStatus").textContent="Placeholder (not linked in v1)";
   $("nowbar").classList.remove("flowon"); $("flowBadge").innerHTML="";
-  updateFlowButtons(); updateMoment();
+  updateFlowButtons(); updateMoment(); updateEars();
   renderLive(); $("nowCue").textContent="Press Start";
 }
 
@@ -1175,6 +1228,35 @@ function updateMoment(){
   if(flowMode!=="follow"){ el.classList.remove("hide"); el.textContent="In this moment "+fmt(momentElapsed); }
   else { el.classList.add("hide"); el.textContent=""; }
 }
+/* ===================== IN-EAR MONITOR (Team Ears — status only) ===================== */
+function nextSecName(){
+  const so=curSongObj(); if(!so)return null;
+  if(curSec < so.sections.length-1) return so.sections[curSec+1].n;
+  if(curSong < songs.length-1){ const ns=songs[curSong+1]; return ns.title+(ns.sections[0]?" — "+ns.sections[0].n:""); }
+  return null;
+}
+function updateEars(){
+  if(!$("earLock"))return;
+  const click=$("optClick").checked, guide=$("optSpeak").checked;
+  const lc=click&&playing, lg=guide&&playing;
+  $("chipClick").classList.toggle("on",lc); $("ledClick").classList.toggle("on",lc);
+  $("chipGuide").classList.toggle("on",lg); $("ledGuide").classList.toggle("on",lg);
+  const lock=$("earLock");
+  if(playing && click && guide){ lock.textContent="Team Ears Locked"; lock.className="earlock locked"; }
+  else if(playing){ lock.textContent="Live · partial"; lock.className="earlock live"; }
+  else if(click||guide){ lock.textContent="In-Ear Ready"; lock.className="earlock ready"; }
+  else { lock.textContent="Standby"; lock.className="earlock"; }
+  // cue: current section + Spirit Flow state (so it never fights the leader) or next-coming preview
+  const s=curSecObj(); let cue="—";
+  if(s && playing){
+    cue=s.n.toUpperCase();
+    if(flowMode==="loop") cue+="  ·  looping (held in the team's ears)";
+    else if(flowMode==="hold") cue+="  ·  holding — next paused";
+    else if(flowMode==="prayer") cue+="  ·  prayer / pad";
+    else { const nx=nextSecName(); if(nx) cue+="  ·  next: "+nx; }
+  } else if(s){ cue="Ready — first up: "+s.n.toUpperCase(); }
+  $("earCue").textContent="Cue: "+cue;
+}
 function flowHold(){ if(!playing)return; setFlow("hold","Holding "+curSecObj().n+" — automatic transitions paused."); }
 function flowLoop(){ if(!playing)return; secElapsed=0; setFlow("loop","Looping "+curSecObj().n+" — click, guide, stems &amp; lyrics stay locked."); cueSection(true); }
 function flowPrayer(){ if(!playing)return; setFlow("prayer","Prayer / pad sustaining — worship leader praying. Take your time."); $("nowCue").textContent="🙏 PRAYER"; speak("Prayer"); }
@@ -1210,6 +1292,7 @@ function updateLiveUI(){
   $("stRemain").textContent=fmt(total-totalElapsed);
   $("stFlow").textContent=fmt(flowAdded);
   updateMoment();
+  updateEars();
   const s=curSecObj();
   if(s){ const p=Math.min(100,(secElapsed/s.s)*100); $("nowProg").style.width=p+"%"; }
   // refresh current-section highlight cheaply
