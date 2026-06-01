@@ -435,6 +435,16 @@
     letter-spacing:0.3px;
   }
   .flow-panel .flow-state b{color:var(--flow);font-weight:700;letter-spacing:0.4px}
+  /* active Spirit Flow mode + live "moment" timer (foundation legibility) */
+  .flow-panel button.btn.active{
+    outline:2px solid var(--flow);outline-offset:2px;
+    box-shadow:0 0 0 1px var(--flow) inset, 0 12px 36px -8px var(--flow-glow);
+  }
+  .flow-panel .flow-state .moment{
+    float:right;color:var(--flow);font-weight:700;letter-spacing:0.4px;
+    font-variant-numeric:tabular-nums;
+  }
+  .flow-panel .flow-state .moment.hide{display:none}
 
   /* ============== ROUTING ============== */
   .route{
@@ -740,13 +750,14 @@
         </div>
       </div>
       <div class="row">
-        <button class="btn flow big" onclick="flowHold()">⏸ &nbsp;Hold Section</button>
-        <button class="btn flow big" onclick="flowLoop()">⟳ &nbsp;Loop Section</button>
-        <button class="btn flow big" onclick="flowPrayer()">🙏 Prayer / Pad</button>
-        <button class="btn gold big" onclick="flowResume()">▶ &nbsp;Resume Set</button>
+        <button class="btn flow big" id="btnFlowHold" onclick="flowHold()">⏸ &nbsp;Hold Section</button>
+        <button class="btn flow big" id="btnFlowLoop" onclick="flowLoop()">⟳ &nbsp;Loop Section</button>
+        <button class="btn flow big" id="btnFlowPrayer" onclick="flowPrayer()">🙏 Prayer / Pad</button>
+        <button class="btn gold big" id="btnFlowResume" onclick="flowResume()">▶ &nbsp;Resume Set</button>
       </div>
       <div class="flow-state" id="flowState">
-        <b>State:</b> Following the planned set.
+        <span class="moment hide" id="flowMoment"></span>
+        <span id="flowStateText"><b>State:</b> Following the planned set.</span>
       </div>
     </div>
 
@@ -1049,7 +1060,7 @@ function speak(text){
 }
 
 /* ===================== TRANSPORT / TIMING ===================== */
-let playing=false, curSong=0, curSec=0, secElapsed=0, totalElapsed=0, flowAdded=0;
+let playing=false, curSong=0, curSec=0, secElapsed=0, totalElapsed=0, flowAdded=0, momentElapsed=0;
 let flowMode="follow"; // follow | hold | loop | prayer
 let lastTick=0, rafId=null, counting=false, countLeft=0;
 
@@ -1075,10 +1086,11 @@ function pausePlay(){ playing=false; $("btnPlay").textContent="▶ Resume"; stop
 function stopAll(){
   playing=false; counting=false; $("btnPlay").textContent="▶ Start";
   stopClick(); stopPad(); if(rafId)cancelAnimationFrame(rafId);
-  curSong=0;curSec=0;secElapsed=0;totalElapsed=0;flowAdded=0;flowMode="follow";
+  curSong=0;curSec=0;secElapsed=0;totalElapsed=0;flowAdded=0;momentElapsed=0;flowMode="follow";
   $("ledEar").classList.remove("ear"); $("ledHouse").classList.remove("on");
   $("ppLed").classList.remove("on"); $("ppStatus").textContent="Placeholder (not linked in v1)";
   $("nowbar").classList.remove("flowon"); $("flowBadge").innerHTML="";
+  updateFlowButtons(); updateMoment();
   renderLive(); $("nowCue").textContent="Press Start";
 }
 
@@ -1100,7 +1112,7 @@ function loop(){
         if(secElapsed>=len){ advanceSection(); }
       } else {
         // hold / loop / prayer -> time is "added", planned clock paused
-        flowAdded+=dt;
+        flowAdded+=dt; momentElapsed+=dt;
         if(flowMode==="loop"){
           const len=curSecObj().s;
           if(secElapsed>=len){ secElapsed=0; cueSection(true); } // seamless re-cue
@@ -1143,11 +1155,25 @@ function jumpToSection(i){ curSec=i; secElapsed=0;
 
 /* ===================== SPIRIT FLOW ===================== */
 function setFlow(mode,label){
+  const wasFollowing = flowMode==="follow";
   flowMode=mode;
   const on = mode!=="follow";
+  if(on && wasFollowing) momentElapsed=0; // a new Spirit Flow moment begins
+  if(!on) momentElapsed=0;                // back on the planned set
   $("nowbar").classList.toggle("flowon",on);
   $("flowBadge").innerHTML = on?'<span class="flowbadge">SPIRIT FLOW</span>':'';
-  $("flowState").innerHTML = "<b>State:</b> "+label;
+  $("flowStateText").innerHTML = "<b>State:</b> "+label;
+  updateFlowButtons(); updateMoment();
+}
+function updateFlowButtons(){
+  const map={hold:"btnFlowHold",loop:"btnFlowLoop",prayer:"btnFlowPrayer"};
+  ["btnFlowHold","btnFlowLoop","btnFlowPrayer"].forEach(id=>$(id).classList.remove("active"));
+  if(map[flowMode]) $(map[flowMode]).classList.add("active");
+}
+function updateMoment(){
+  const el=$("flowMoment"); if(!el)return;
+  if(flowMode!=="follow"){ el.classList.remove("hide"); el.textContent="In this moment "+fmt(momentElapsed); }
+  else { el.classList.add("hide"); el.textContent=""; }
 }
 function flowHold(){ if(!playing)return; setFlow("hold","Holding "+curSecObj().n+" — automatic transitions paused."); }
 function flowLoop(){ if(!playing)return; secElapsed=0; setFlow("loop","Looping "+curSecObj().n+" — click, guide, stems &amp; lyrics stay locked."); cueSection(true); }
@@ -1183,6 +1209,7 @@ function updateLiveUI(){
   $("stElapsed").textContent=fmt(totalElapsed);
   $("stRemain").textContent=fmt(total-totalElapsed);
   $("stFlow").textContent=fmt(flowAdded);
+  updateMoment();
   const s=curSecObj();
   if(s){ const p=Math.min(100,(secElapsed/s.s)*100); $("nowProg").style.width=p+"%"; }
   // refresh current-section highlight cheaply
