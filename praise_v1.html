@@ -457,6 +457,7 @@
   }
   .earchip.on{border-color:var(--cyan);color:var(--ink);box-shadow:0 0 0 1px rgba(127,227,242,0.25) inset}
   .earchip.house{border-color:rgba(95,210,228,0.30)}
+  .earchip.cmode{cursor:pointer}
   .earcue{
     margin-top:10px;padding:10px 14px;border-radius:10px;
     background:rgba(8,12,22,0.55);border:1px solid var(--line);
@@ -678,7 +679,7 @@
 <nav>
   <button data-view="set" class="active">Set Builder</button>
   <button data-view="live">Live / Run</button>
-  <button data-view="routing">Audio Routing</button>
+  <button data-view="routing">Routing &amp; Integration</button>
   <button data-view="about">About</button>
 </nav>
 
@@ -785,8 +786,10 @@
         <span class="earchip house"><span class="led on"></span>House → worship (clean)</span>
       </div>
       <div class="earcue" id="earCue">Cue: —</div>
-      <div class="small earnote">Foundation — monitor status only. Routes into your existing in-ear
-        system; no separate audio bus or custom hardware yet.</div>
+      <div class="small earnote"><b>Separate unit:</b> PRAISE personal in-ear control is a separate layer
+        from the StudioLive monitor mix — each musician shapes their own PRAISE in-ears. PRAISE connects
+        alongside the board; the StudioLive stays the live board. This build shows monitor status only —
+        real hardware integration and separate audio routing are future work.</div>
     </div>
 
     <!-- SPIRIT FLOW — elevated, sacred -->
@@ -826,13 +829,88 @@
     </div>
   </section>
 
-  <!-- ============ ROUTING ============ -->
+  <!-- ============ ROUTING & INTEGRATION ============ -->
   <section id="routing" class="view">
-    <div class="eyebrow">Phase 1 · Routing Concept</div>
-    <h2>Audio Routing</h2>
-    <div class="sub">Praise is the brain. House hears worship. Team hears click + guide.</div>
+    <div class="eyebrow">Phase 1 · Signal Flow &amp; Board Integration</div>
+    <h2>Routing &amp; Integration</h2>
+    <div class="sub">The StudioLive 64S stays the live board. PRAISE connects alongside it as a separate personal in-ear control unit.</div>
 
+    <!-- SIGNAL FLOW — how PRAISE sits in the real rig (concept) -->
     <div class="panel">
+      <div class="eyebrow">Signal Flow · Concept</div>
+      <strong style="font-size:15px">How PRAISE sits in your real setup</strong>
+      <div style="margin-top:14px"></div>
+      <div class="route">
+        <div class="ic">🎤</div>
+        <div class="nm">Mics / Instruments → StudioLive 64S</div>
+        <span class="pill">Live inputs</span>
+      </div>
+      <div class="route house">
+        <div class="ic">🎛️</div>
+        <div class="nm house">StudioLive 64S — live board &amp; house authority</div>
+        <span class="pill">House output</span>
+        <span class="never">PRAISE never overrides</span>
+      </div>
+      <div class="route">
+        <div class="ic">🔌</div>
+        <div class="nm">StudioLive USB → Mac / Pro Tools</div>
+        <span class="pill">DAW capture</span>
+      </div>
+      <div class="route">
+        <div class="ic">📡</div>
+        <div class="nm">Mac / Pro Tools → OBS stream</div>
+        <span class="pill">Stream audio</span>
+      </div>
+      <div class="route ear">
+        <div class="ic">🎧</div>
+        <div class="nm ear">PRAISE → separate personal in-ear control unit</div>
+        <span class="pill">Alongside the board</span>
+        <span class="concept-tag">Concept</span>
+      </div>
+      <hr>
+      <div class="hint">
+        <b>Separate unit:</b> PRAISE works <b>alongside</b> the StudioLive 64S — it does not replace the
+        board and is not trapped inside the board's monitor-mix system. The StudioLive keeps control of
+        live inputs and the protected house output; PRAISE is a separate control layer for personal in-ears.
+      </div>
+    </div>
+
+    <!-- CONNECTION MODE — concept selector, nothing actually connected -->
+    <div class="panel">
+      <div class="eyebrow">Connection Mode <span class="concept-tag">Concept · not yet connected</span></div>
+      <strong style="font-size:15px">Where PRAISE will eventually integrate</strong>
+      <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:12px">
+        <span class="earchip cmode on" id="cmConcept" onclick="setConnMode('concept')">Concept Mode</span>
+        <span class="earchip cmode" id="cmBoard" onclick="setConnMode('board')">StudioLive 64S Target</span>
+        <span class="earchip cmode" id="cmDaw" onclick="setConnMode('daw')">DAW / Pro Tools Path</span>
+        <span class="earchip cmode" id="cmHw" onclick="setConnMode('hw')">Future Hardware Unit</span>
+      </div>
+      <div class="earcue" id="connStatus">Concept Mode — nothing is connected yet. PRAISE is modeling the architecture, not controlling hardware.</div>
+      <div class="small earnote">No PreSonus / Universal Control / Pro Tools / OBS integration is active.
+        These targets describe the roadmap; real hardware control is future work.</div>
+    </div>
+
+    <!-- PERSONAL IN-EAR ROLES — concept layer -->
+    <div class="panel">
+      <div class="eyebrow">Personal In-Ear Roles · Concept</div>
+      <strong style="font-size:15px">Each musician controls their own PRAISE in-ears</strong>
+      <div class="small" style="margin:8px 0 14px">Separate from the StudioLive monitor mix — every role shapes what they hear in PRAISE without touching the board.</div>
+      <div class="route"><div class="ic">🎙️</div><div class="nm">Worship Leader</div><span class="pill">Guide low · vocal-led · Spirit Flow cues</span></div>
+      <div class="route"><div class="ic">🥁</div><div class="nm">Drummer</div><span class="pill">Click strong · tight rhythm</span></div>
+      <div class="route"><div class="ic">🎸</div><div class="nm">Bass</div><span class="pill">Click + kick · root anchor</span></div>
+      <div class="route"><div class="ic">🎹</div><div class="nm">Keys</div><span class="pill">Pads + guide · section cues</span></div>
+      <div class="route"><div class="ic">🎶</div><div class="nm">Guitar</div><span class="pill">Click + arrangement cues</span></div>
+      <div class="route"><div class="ic">🎵</div><div class="nm">BGV</div><span class="pill">Guide + lead reference</span></div>
+      <div class="route"><div class="ic">🎚️</div><div class="nm">Tracks Operator</div><span class="pill">Full mix · click · all cues</span></div>
+      <div class="hint" style="margin-top:12px">
+        Roles are a concept layer for now — they describe each person's personal PRAISE in-ear focus.
+        No per-output audio routing is active yet.
+      </div>
+    </div>
+
+    <!-- PRAISE internal output concept (preserved) -->
+    <div class="panel">
+      <div class="eyebrow">PRAISE Output Concept</div>
       <div class="route house">
         <div class="ic">🔊</div>
         <div class="nm house">House Stereo Mix</div>
@@ -1256,6 +1334,21 @@ function updateEars(){
     else { const nx=nextSecName(); if(nx) cue+="  ·  next: "+nx; }
   } else if(s){ cue="Ready — first up: "+s.n.toUpperCase(); }
   $("earCue").textContent="Cue: "+cue;
+}
+/* ===================== CONNECTION MODE (concept only — no real hardware) ===================== */
+let connMode="concept";
+function setConnMode(mode){
+  connMode=mode;
+  const ids={concept:"cmConcept",board:"cmBoard",daw:"cmDaw",hw:"cmHw"};
+  Object.values(ids).forEach(id=>{ const e=$(id); if(e) e.classList.remove("on"); });
+  const cur=$(ids[mode]); if(cur) cur.classList.add("on");
+  const msg={
+    concept:"Concept Mode — nothing is connected yet. PRAISE is modeling the architecture, not controlling hardware.",
+    board:"StudioLive 64S Target (concept) — PRAISE would connect alongside the board. The StudioLive stays the live & house authority; PRAISE never overrides it.",
+    daw:"DAW / Pro Tools Path (concept) — models the USB capture into the Mac feeding Pro Tools and the OBS stream. No DAW control is active.",
+    hw:"Future Hardware Unit (concept) — a dedicated PRAISE personal in-ear unit, separate from the board. Not built yet."
+  };
+  const el=$("connStatus"); if(el) el.textContent=msg[mode]||msg.concept;
 }
 function flowHold(){ if(!playing)return; setFlow("hold","Holding "+curSecObj().n+" — automatic transitions paused."); }
 function flowLoop(){ if(!playing)return; secElapsed=0; setFlow("loop","Looping "+curSecObj().n+" — click, guide, stems &amp; lyrics stay locked."); cueSection(true); }
