@@ -18,9 +18,9 @@ Repo: **`blacnote/Praise`**. It is **not** part of and must **not** be merged in
 DreLovesGod-site, 1DROP, SingSense, HARMONY, ASCEND, SUMMIT, CLARITY, or any other app/repo.
 See `docs/SAFETY_RULES.md`.
 
-> Note: the app build (`praise_v1.html`) currently still reads "ChurchSense" internally in its
-> header/About text. That in-app rename is intentionally NOT done yet — pending approval. The
-> project, folder, files, and repo are named **Praise**.
+> Note: the app build (`praise_v1.html`) now reads **Praise** throughout its header/About text.
+> The project, folder, files, and repo are all named **Praise**. (Planning docs under `docs/`
+> still use the original "ChurchSense" working name; that is a separate, deferred cleanup.)
 
 ## Folder structure
 ```
