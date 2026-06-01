@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChurchSense — by DLGSENSE</title>
+<style>
+  /* =========================================================
+     ChurchSense · DLGSENSE
+     Visual identity pass — dark cinematic, glassmorphic,
+     teal/cyan/silver with soft purple Spirit Flow accent.
+     ========================================================= */
+  :root{
+    /* Cinematic foundation */
+    --bg:#06080f;
+    --bg-2:#0a0e1a;
+    --panel:rgba(20,28,48,0.55);
+    --panel2:rgba(28,38,62,0.65);
+    --panel-solid:#131a2c;
+    --line:rgba(140,180,225,0.16);
+    --line-strong:rgba(160,210,245,0.32);
+
+    /* Ink */
+    --ink:#eef2fb;
+    --ink-dim:#c6d2e5;
+    --mut:#8593b3;
+
+    /* Accents — teal / cyan / silver / soft purple */
+    --gold:#5fd2e4;           /* primary worship-active accent (kept var name; now cool cyan) */
+    --gold-glow:rgba(95,210,228,0.45);
+    --cyan:#7fe3f2;
+    --teal:#34c2c4;
+    --silver:#c6d2e5;
+    --flow:#b87bff;           /* Spirit Flow soft purple */
+    --flow2:#7c4dd9;
+    --flow-glow:rgba(184,123,255,0.55);
+
+    /* Status */
+    --good:#4ddf9a;
+    --warn:#f0b964;
+    --red:#ff6b80;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(1100px 600px at 20% -10%, rgba(95,210,228,0.10), transparent 60%),
+      radial-gradient(900px 500px at 95% 0%, rgba(184,123,255,0.10), transparent 55%),
+      radial-gradient(1200px 700px at 50% 110%, rgba(52,194,196,0.07), transparent 60%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    letter-spacing:0.005em;
+  }
+
+  /* ============== HEADER ============== */
+  header{
+    display:flex;align-items:center;gap:18px;
+    padding:20px 28px 18px;
+    background:linear-gradient(180deg, rgba(8,11,20,0.92), rgba(8,11,20,0.55));
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    position:sticky;top:0;z-index:50;
+  }
+  .mark{
+    display:flex;align-items:center;gap:14px;
+  }
+  .mark .glyph{
+    width:38px;height:38px;border-radius:11px;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(95,210,228,0.55), transparent 60%),
+      linear-gradient(135deg, rgba(184,123,255,0.35), rgba(52,194,196,0.25));
+    border:1px solid var(--line-strong);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 22px -6px var(--gold-glow), inset 0 0 18px rgba(95,210,228,0.18);
+    position:relative;
+  }
+  .mark .glyph::before{
+    content:"";position:absolute;inset:8px;
+    background:
+      linear-gradient(var(--ink), var(--ink)) center/2px 60% no-repeat,
+      linear-gradient(var(--ink), var(--ink)) center/60% 2px no-repeat;
+    opacity:0.85;border-radius:3px;
+    filter:drop-shadow(0 0 4px var(--gold-glow));
+  }
+  .mark .wordmark{display:flex;flex-direction:column;line-height:1.05}
+  .mark .name{
+    font-weight:700;font-size:22px;letter-spacing:0.5px;
+    background:linear-gradient(90deg, #ffffff 0%, var(--silver) 60%, var(--cyan) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .mark .name b{font-weight:800;color:transparent;background:inherit;-webkit-background-clip:text}
+  .mark .by{
+    font-size:10px;letter-spacing:2.2px;color:var(--mut);
+    text-transform:uppercase;margin-top:3px;
+  }
+  .mark .by span{color:var(--cyan);font-weight:700}
+
+  .tag{
+    margin-left:auto;font-size:12px;color:var(--ink-dim);
+    font-style:italic;letter-spacing:0.3px;
+    padding:6px 14px;border:1px solid var(--line);border-radius:999px;
+    background:rgba(20,28,48,0.45);
+    backdrop-filter:blur(8px);
+    max-width:480px;text-align:right;
+  }
+
+  /* ============== NAV ============== */
+  nav{
+    display:flex;gap:6px;padding:14px 28px;
+    background:rgba(10,14,26,0.55);
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    position:sticky;top:73px;z-index:40;
+  }
+  nav button{
+    background:transparent;border:1px solid transparent;color:var(--mut);
+    padding:9px 18px;border-radius:10px;cursor:pointer;
+    font-size:13px;font-weight:600;letter-spacing:0.4px;
+    transition:all 0.18s ease;
+    position:relative;
+  }
+  nav button:hover{color:var(--ink);background:rgba(95,210,228,0.06)}
+  nav button.active{
+    color:var(--ink);
+    background:linear-gradient(180deg, rgba(95,210,228,0.16), rgba(95,210,228,0.04));
+    border-color:rgba(95,210,228,0.35);
+    box-shadow:0 0 18px -8px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+  nav button.active::after{
+    content:"";position:absolute;left:18px;right:18px;bottom:-15px;height:2px;
+    background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+    border-radius:2px;
+  }
+
+  /* ============== LAYOUT ============== */
+  main{padding:28px 28px 60px;max-width:1180px;margin:0 auto}
+  .view{display:none;animation:fadein 0.35s ease}
+  .view.active{display:block}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  h2{
+    margin:0 0 6px;font-size:26px;font-weight:700;
+    letter-spacing:-0.01em;
+    background:linear-gradient(90deg, #ffffff, var(--silver));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{color:var(--mut);font-size:13px;margin-bottom:22px;letter-spacing:0.2px}
+  .eyebrow{
+    font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--cyan);font-weight:700;margin-bottom:6px;
+  }
+
+  /* ============== GLASS PANELS ============== */
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:22px;margin-bottom:18px;
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.04) inset,
+      0 20px 50px -30px rgba(0,0,0,0.7);
+    position:relative;
+  }
+  .panel::before{
+    content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;
+    background:linear-gradient(180deg, rgba(255,255,255,0.04), transparent 30%);
+  }
+
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .grid{display:grid;gap:12px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:780px){.two{grid-template-columns:1fr}}
+
+  /* ============== FORMS ============== */
+  label{font-size:11px;color:var(--mut);display:block;margin-bottom:5px;letter-spacing:0.6px;text-transform:uppercase}
+  input,select,textarea{
+    background:rgba(8,12,22,0.7);
+    border:1px solid var(--line);color:var(--ink);
+    border-radius:10px;padding:10px 12px;font-size:14px;width:100%;
+    font-family:inherit;letter-spacing:0.2px;
+    transition:border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus,select:focus,textarea:focus{
+    outline:none;border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(95,210,228,0.14);
+  }
+  textarea{min-height:78px;resize:vertical;line-height:1.5}
+
+  /* ============== BUTTONS ============== */
+  button.btn{
+    background:rgba(28,38,62,0.7);
+    border:1px solid var(--line);color:var(--ink);
+    padding:10px 18px;border-radius:11px;cursor:pointer;
+    font-size:13px;font-weight:600;letter-spacing:0.3px;
+    transition:all 0.16s ease;
+    font-family:inherit;
+  }
+  button.btn:hover{border-color:var(--gold);box-shadow:0 0 0 3px rgba(95,210,228,0.10);transform:translateY(-1px)}
+  button.btn.gold{
+    background:linear-gradient(180deg, var(--gold), var(--teal));
+    color:#031820;border-color:transparent;font-weight:700;
+    box-shadow:0 6px 24px -8px var(--gold-glow);
+  }
+  button.btn.gold:hover{box-shadow:0 8px 30px -8px var(--gold-glow);transform:translateY(-1px)}
+  button.btn.cyan{
+    background:linear-gradient(180deg, var(--cyan), var(--gold));
+    color:#031820;border-color:transparent;font-weight:700;
+    box-shadow:0 6px 24px -8px var(--gold-glow);
+  }
+  button.btn.red{
+    background:transparent;color:var(--red);border-color:rgba(255,107,128,0.4);
+  }
+  button.btn.red:hover{background:rgba(255,107,128,0.08);box-shadow:none}
+  button.btn.flow{
+    background:linear-gradient(135deg, var(--flow), var(--flow2));
+    color:#fff;border:none;font-weight:700;
+    box-shadow:0 8px 28px -10px var(--flow-glow);
+    position:relative;overflow:hidden;
+  }
+  button.btn.flow:hover{box-shadow:0 12px 36px -10px var(--flow-glow);transform:translateY(-1px)}
+  button.btn.flow::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(255,255,255,0.12), transparent 40%);
+    pointer-events:none;
+  }
+  button.btn.big{padding:14px 22px;font-size:14px;border-radius:13px}
+
+  /* ============== SONG CARDS ============== */
+  .songcard{
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(180deg, rgba(28,38,62,0.55), rgba(20,28,48,0.55));
+    border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px;margin-bottom:10px;
+    transition:all 0.18s ease;
+  }
+  .songcard:hover{border-color:var(--line-strong);transform:translateX(2px)}
+  .songcard .num{
+    width:34px;height:34px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(95,210,228,0.35), rgba(8,12,22,0.9));
+    border:1px solid var(--line-strong);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;color:var(--gold);flex:none;
+    font-size:13px;
+    box-shadow:inset 0 0 10px rgba(95,210,228,0.18);
+  }
+  .songcard .meta{flex:1;min-width:0}
+  .songcard .meta .t{font-weight:700;font-size:15px;letter-spacing:0.2px}
+  .songcard .meta .d{font-size:12px;color:var(--mut);margin-top:3px;letter-spacing:0.2px}
+  .songcard.cur{
+    border-color:var(--gold);
+    background:linear-gradient(180deg, rgba(95,210,228,0.10), rgba(20,28,48,0.55));
+    box-shadow:0 0 0 1px var(--gold) inset, 0 0 30px -10px var(--gold-glow);
+  }
+
+  /* ============== PILLS ============== */
+  .pill{
+    font-size:10px;padding:4px 10px;border-radius:999px;
+    background:rgba(8,12,22,0.65);
+    border:1px solid var(--line);color:var(--ink-dim);
+    letter-spacing:0.5px;text-transform:uppercase;font-weight:600;
+  }
+
+  /* ============== STAT CARDS ============== */
+  .stat{
+    flex:1;min-width:140px;
+    background:linear-gradient(180deg, rgba(28,38,62,0.55), rgba(20,28,48,0.45));
+    border:1px solid var(--line);
+    border-radius:14px;padding:16px 14px;text-align:center;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    position:relative;overflow:hidden;
+  }
+  .stat::before{
+    content:"";position:absolute;left:0;right:0;top:0;height:1px;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  }
+  .stat .v{
+    font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;
+    letter-spacing:-0.01em;line-height:1.1;
+  }
+  .stat .k{
+    font-size:10px;color:var(--mut);text-transform:uppercase;
+    letter-spacing:1px;margin-top:6px;font-weight:600;
+  }
+  .stat.flow .v{color:var(--flow);text-shadow:0 0 16px var(--flow-glow)}
+  .stat.good .v{color:var(--good);text-shadow:0 0 14px rgba(77,223,154,0.4)}
+  .stat.gold .v{color:var(--gold);text-shadow:0 0 14px var(--gold-glow)}
+
+  /* ============== SECTION LIST ============== */
+  .seclist{display:flex;flex-direction:column;gap:7px}
+  .sec{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 14px;border-radius:11px;
+    background:rgba(20,28,48,0.45);
+    border:1px solid var(--line);cursor:pointer;
+    transition:all 0.15s ease;
+  }
+  .sec:hover{border-color:var(--line-strong);background:rgba(28,38,62,0.6)}
+  .sec .nm{flex:1;font-weight:600;font-size:14px;letter-spacing:0.2px}
+  .sec.cur{
+    background:linear-gradient(90deg, rgba(95,210,228,0.18), rgba(20,28,48,0.5));
+    border-color:var(--gold);
+    box-shadow:inset 0 0 18px rgba(95,210,228,0.10);
+  }
+  .sec.done{opacity:.4}
+
+  /* ============== NOW BAR (command center) ============== */
+  .nowbar{
+    background:
+      radial-gradient(600px 200px at 80% -20%, rgba(95,210,228,0.18), transparent 60%),
+      linear-gradient(180deg, rgba(28,38,62,0.85), rgba(16,22,40,0.85));
+    border:1px solid var(--gold);
+    border-radius:20px;padding:24px 26px;margin-bottom:18px;
+    position:relative;overflow:hidden;
+    box-shadow:
+      0 0 0 1px rgba(95,210,228,0.10),
+      0 30px 60px -30px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+    backdrop-filter:blur(14px);
+  }
+  .nowbar.flowon{
+    border-color:var(--flow);
+    box-shadow:
+      0 0 0 1px var(--flow-glow),
+      0 0 60px -10px var(--flow-glow),
+      0 30px 60px -30px rgba(0,0,0,0.8);
+    background:
+      radial-gradient(600px 220px at 80% -20%, rgba(184,123,255,0.22), transparent 60%),
+      linear-gradient(180deg, rgba(36,28,62,0.85), rgba(20,16,40,0.85));
+  }
+  .nowbar .lab{
+    font-size:10px;color:var(--mut);
+    letter-spacing:2px;text-transform:uppercase;font-weight:700;
+  }
+  .nowbar .big{
+    font-size:32px;font-weight:800;margin-top:6px;letter-spacing:-0.01em;
+    background:linear-gradient(90deg, #ffffff, var(--silver));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .nowbar .cue{
+    font-size:18px;color:var(--gold);margin-top:8px;font-weight:700;
+    letter-spacing:1.5px;text-transform:uppercase;
+    text-shadow:0 0 16px var(--gold-glow);
+  }
+  .nowbar.flowon .cue{color:var(--flow);text-shadow:0 0 16px var(--flow-glow)}
+
+  .prog{
+    height:6px;background:rgba(8,12,22,0.7);
+    border-radius:6px;overflow:hidden;margin-top:16px;
+    border:1px solid var(--line);
+  }
+  .prog>i{
+    display:block;height:100%;width:0%;
+    background:linear-gradient(90deg, var(--gold), var(--cyan));
+    box-shadow:0 0 12px var(--gold-glow);
+    transition:width 0.18s linear;
+  }
+  .nowbar.flowon .prog>i{
+    background:linear-gradient(90deg, var(--flow), var(--flow2));
+    box-shadow:0 0 14px var(--flow-glow);
+  }
+
+  .flowbadge{
+    display:inline-block;
+    background:linear-gradient(90deg, var(--flow), var(--flow2));
+    color:#fff;font-size:10px;font-weight:800;
+    padding:4px 12px;border-radius:999px;letter-spacing:1.5px;
+    margin-left:10px;vertical-align:middle;
+    box-shadow:0 0 16px var(--flow-glow);
+    animation:pulse 1.6s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+  /* ============== EARS / HOUSE LEDS ============== */
+  .ear{color:var(--cyan)}
+  .house{color:var(--gold)}
+  .led{
+    width:9px;height:9px;border-radius:50%;
+    background:#2a3450;display:inline-block;margin-right:6px;
+    vertical-align:middle;
+  }
+  .led.on{background:var(--good);box-shadow:0 0 10px var(--good)}
+  .led.ear{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+
+  /* ============== SPIRIT FLOW PANEL — sacred ============== */
+  .flow-panel{
+    background:
+      radial-gradient(500px 240px at 20% 0%, rgba(184,123,255,0.15), transparent 60%),
+      radial-gradient(500px 240px at 100% 100%, rgba(124,77,217,0.12), transparent 60%),
+      linear-gradient(180deg, rgba(28,22,48,0.75), rgba(20,16,40,0.75));
+    border:1px solid rgba(184,123,255,0.45);
+    border-radius:20px;padding:24px 26px;margin-bottom:18px;
+    backdrop-filter:blur(16px);
+    box-shadow:
+      0 0 0 1px rgba(184,123,255,0.10),
+      0 0 60px -20px var(--flow-glow),
+      0 30px 60px -30px rgba(0,0,0,0.7);
+    position:relative;overflow:hidden;
+  }
+  .flow-panel::before{
+    content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;
+    background:linear-gradient(180deg, rgba(255,255,255,0.05), transparent 30%);
+  }
+  .flow-panel .flow-head{
+    display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;
+  }
+  .flow-panel .flow-star{
+    font-size:22px;color:var(--flow);
+    text-shadow:0 0 18px var(--flow-glow);
+    line-height:1;
+  }
+  .flow-panel .flow-title{
+    font-size:18px;font-weight:700;letter-spacing:0.4px;
+    background:linear-gradient(90deg, #fff, #d9c5ff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .flow-panel .flow-sub{
+    color:var(--ink-dim);font-size:13px;margin-top:4px;line-height:1.55;
+    font-style:italic;letter-spacing:0.2px;
+  }
+  .flow-panel .flow-state{
+    margin-top:14px;padding:10px 14px;
+    background:rgba(8,12,22,0.55);border:1px solid var(--line);
+    border-radius:10px;font-size:12px;color:var(--ink-dim);
+    letter-spacing:0.3px;
+  }
+  .flow-panel .flow-state b{color:var(--flow);font-weight:700;letter-spacing:0.4px}
+
+  /* ============== ROUTING ============== */
+  .route{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 16px;
+    border:1px solid var(--line);
+    border-radius:13px;margin-bottom:10px;
+    background:linear-gradient(180deg, rgba(20,28,48,0.55), rgba(20,28,48,0.35));
+    transition:border-color 0.15s;
+  }
+  .route:hover{border-color:var(--line-strong)}
+  .route.house{border-color:rgba(95,210,228,0.35)}
+  .route.ear{border-color:rgba(127,227,242,0.30)}
+  .route .ic{
+    font-size:22px;width:42px;height:42px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(8,12,22,0.65);
+    border:1px solid var(--line);border-radius:11px;flex:none;
+  }
+  .route .nm{flex:1;font-weight:700;font-size:14px;letter-spacing:0.2px}
+  .never{
+    color:var(--red);font-weight:800;font-size:10px;letter-spacing:1.4px;
+    padding:4px 10px;border:1px solid rgba(255,107,128,0.4);
+    border-radius:999px;background:rgba(255,107,128,0.08);
+    text-transform:uppercase;
+  }
+
+  /* ============== HINT ============== */
+  .hint{
+    background:linear-gradient(180deg, rgba(95,210,228,0.10), rgba(95,210,228,0.04));
+    border:1px solid rgba(95,210,228,0.30);
+    border-radius:12px;padding:14px 16px;font-size:13px;color:#cfeef6;
+    letter-spacing:0.2px;line-height:1.55;
+  }
+  .hint.flow{
+    background:linear-gradient(180deg, rgba(184,123,255,0.10), rgba(184,123,255,0.04));
+    border-color:rgba(184,123,255,0.30);color:#e2d2ff;
+  }
+
+  /* ============== ABOUT ============== */
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+  @media(max-width:780px){.about-grid{grid-template-columns:1fr}}
+  .about-card{
+    background:linear-gradient(180deg, rgba(28,38,62,0.55), rgba(20,28,48,0.45));
+    border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  }
+  .about-card h3{
+    margin:0 0 10px;font-size:14px;font-weight:700;
+    letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);
+  }
+  .about-card ul{margin:0;padding-left:18px;color:var(--ink-dim);font-size:13px;line-height:1.7;letter-spacing:0.15px}
+  .about-card ul li b{color:var(--ink)}
+  .about-card.flow{border-color:rgba(184,123,255,0.30)}
+  .about-card.flow h3{color:var(--flow)}
+
+  .creed{
+    margin:24px 0 8px;text-align:center;
+    font-size:15px;font-style:italic;color:var(--ink-dim);letter-spacing:0.4px;
+    padding:18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    background:linear-gradient(90deg, transparent, rgba(95,210,228,0.05), transparent);
+  }
+  .creed b{
+    background:linear-gradient(90deg, var(--cyan), var(--flow));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    font-weight:700;font-style:normal;
+  }
+
+  /* ============== MISC ============== */
+  .small{font-size:12px;color:var(--mut);letter-spacing:0.2px}
+  .microcopy{
+    font-size:11px;color:var(--mut);
+    letter-spacing:1.2px;text-transform:uppercase;font-weight:600;
+    margin-top:6px;
+  }
+  hr{border:none;border-top:1px solid var(--line);margin:16px 0}
+
+  /* honest "concept" tag */
+  .concept-tag{
+    display:inline-block;font-size:9px;font-weight:700;letter-spacing:1.5px;
+    padding:3px 8px;border:1px dashed var(--mut);color:var(--mut);
+    border-radius:999px;text-transform:uppercase;margin-left:8px;
+    vertical-align:middle;
+  }
+
+  /* footer creed */
+  .footnote{
+    text-align:center;color:var(--mut);font-size:11px;
+    letter-spacing:1.5px;text-transform:uppercase;
+    margin:36px 0 8px;
+  }
+  .footnote span{color:var(--cyan);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ============== HEADER ============== -->
+<header>
+  <div class="mark">
+    <div class="glyph" aria-hidden="true"></div>
+    <div class="wordmark">
+      <div class="logo name"><b>Church</b>Sense</div>
+      <div class="by">by <span>DLGSENSE</span> · worship-service OS</div>
+    </div>
+  </div>
+  <div class="tag">ChurchSense follows worship. Worship does not follow ChurchSense.</div>
+</header>
+
+<!-- ============== NAV ============== -->
+<nav>
+  <button data-view="set" class="active">Set Builder</button>
+  <button data-view="live">Live / Run</button>
+  <button data-view="routing">Audio Routing</button>
+  <button data-view="about">About</button>
+</nav>
+
+<main>
+  <!-- ============ SET BUILDER ============ -->
+  <section id="set" class="view active">
+    <div class="eyebrow">Phase 1 · Plan</div>
+    <h2>Worship Set Builder</h2>
+    <div class="sub">Build the order. See total service time. Sunday-morning trust starts here.</div>
+
+    <div class="panel">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <strong id="setTotalLbl" style="font-size:15px;letter-spacing:0.2px">Total worship time: 0:00</strong>
+          <span class="small">&nbsp;·&nbsp;<span id="setCount">0</span> songs in the set</span>
+          <div class="microcopy">Built for Sunday morning trust</div>
+        </div>
+        <button class="btn gold" onclick="openSongEditor()">+ Add Song</button>
+      </div>
+      <hr>
+      <div id="setList"></div>
+    </div>
+
+    <!-- inline editor -->
+    <div class="panel" id="editorPanel" style="display:none">
+      <div class="eyebrow">Song</div>
+      <h2 id="edTitle">Add Song</h2>
+      <div class="sub">Section lengths drive the live clock and Spirit Flow.</div>
+      <div class="two">
+        <div><label>Title</label><input id="edSongTitle" placeholder="Song title"></div>
+        <div><label>Artist / origin</label><input id="edArtist" placeholder="Artist"></div>
+      </div>
+      <div class="two" style="margin-top:12px">
+        <div><label>Key</label><input id="edKey" placeholder="e.g. B"></div>
+        <div><label>Tempo (BPM)</label><input id="edBpm" type="number" placeholder="72"></div>
+      </div>
+      <div style="margin-top:12px"><label>Lyrics (optional)</label>
+        <textarea id="edLyrics" placeholder="Lyrics..."></textarea></div>
+      <hr>
+      <label>Sections (name &amp; length in seconds — used for the live clock)</label>
+      <div id="edSections" class="grid"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn" onclick="addSectionRow()">+ Section</button>
+        <span class="small">No lead-vocal stem — the worship leader sings live.</span>
+      </div>
+      <hr>
+      <div class="row">
+        <button class="btn gold" onclick="saveSong()">Save Song</button>
+        <button class="btn" onclick="closeEditor()">Cancel</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LIVE / RUN ============ -->
+  <section id="live" class="view">
+    <div class="eyebrow">Phase 1 · Run</div>
+    <h2>Live / Run</h2>
+    <div class="sub">The service can breathe. The band hears click + guide. The house never does.</div>
+
+    <div class="nowbar" id="nowbar">
+      <div class="lab">Now playing <span id="flowBadge"></span></div>
+      <div class="big" id="nowSong">—</div>
+      <div class="cue" id="nowCue">Press Start</div>
+      <div class="prog"><i id="nowProg"></i></div>
+      <div class="row" style="margin-top:14px;justify-content:space-between">
+        <span class="small"><span class="led ear" id="ledEar"></span>Click + Guide → <span class="ear">team ears only</span></span>
+        <span class="small"><span class="led" id="ledHouse"></span>House mix → <span class="house">congregation (clean)</span></span>
+      </div>
+    </div>
+
+    <div class="row" style="margin-bottom:18px">
+      <div class="stat gold"><div class="v" id="stElapsed">0:00</div><div class="k">Elapsed</div></div>
+      <div class="stat good"><div class="v" id="stRemain">0:00</div><div class="k">Remaining · Planned</div></div>
+      <div class="stat"><div class="v" id="stTotal">0:00</div><div class="k">Set Total</div></div>
+      <div class="stat flow"><div class="v" id="stFlow">0:00</div><div class="k">Spirit Flow Added</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="row">
+        <button class="btn cyan big" id="btnPlay" onclick="togglePlay()">▶ Start</button>
+        <button class="btn big" onclick="stopAll()">■ Stop</button>
+        <div style="flex:1"></div>
+        <label style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink-dim)">
+          <input type="checkbox" id="optSpeak" checked style="width:auto;margin-right:4px"> Spoken guide
+        </label>
+        <label style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink-dim)">
+          <input type="checkbox" id="optClick" checked style="width:auto;margin-right:4px"> Click
+        </label>
+      </div>
+    </div>
+
+    <!-- SPIRIT FLOW — elevated, sacred -->
+    <div class="flow-panel">
+      <div class="flow-head">
+        <div class="flow-star">✦</div>
+        <div style="flex:1">
+          <div class="flow-title">Spirit Flow Mode</div>
+          <div class="flow-sub">Hold the moment. Loop the section. Pray. Resume the plan — everything stays in sync.</div>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn flow big" onclick="flowHold()">⏸ &nbsp;Hold Section</button>
+        <button class="btn flow big" onclick="flowLoop()">⟳ &nbsp;Loop Section</button>
+        <button class="btn flow big" onclick="flowPrayer()">🙏 Prayer / Pad</button>
+        <button class="btn gold big" onclick="flowResume()">▶ &nbsp;Resume Set</button>
+      </div>
+      <div class="flow-state" id="flowState">
+        <b>State:</b> Following the planned set.
+      </div>
+    </div>
+
+    <div class="two">
+      <div class="panel">
+        <div class="eyebrow">Song</div>
+        <strong style="font-size:15px">Sections</strong>
+        <div class="small" style="margin:6px 0 12px">Tap any section to jump to it.</div>
+        <div class="seclist" id="liveSections"></div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Service</div>
+        <strong style="font-size:15px">Worship Order</strong>
+        <div class="small" style="margin:6px 0 12px">Tap a song to jump (e.g. Song 2 of 3).</div>
+        <div id="liveOrder"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ROUTING ============ -->
+  <section id="routing" class="view">
+    <div class="eyebrow">Phase 1 · Routing Concept</div>
+    <h2>Audio Routing</h2>
+    <div class="sub">ChurchSense is the brain. House hears worship. Team hears click + guide.</div>
+
+    <div class="panel">
+      <div class="route house">
+        <div class="ic">🔊</div>
+        <div class="nm house">House Stereo Mix</div>
+        <span class="pill">Congregation</span>
+        <span class="never">Never click/guide</span>
+      </div>
+      <div class="route ear">
+        <div class="ic">🥁</div>
+        <div class="nm ear">Click Output</div>
+        <span class="pill">Team ears only</span>
+      </div>
+      <div class="route ear">
+        <div class="ic">🗣️</div>
+        <div class="nm ear">Guide Output</div>
+        <span class="pill">Team ears only</span>
+      </div>
+      <div class="route">
+        <div class="ic">🎚️</div>
+        <div class="nm">Stem Group Outputs</div>
+        <span class="pill">Optional</span>
+        <span class="concept-tag">Concept</span>
+      </div>
+      <div class="route">
+        <div class="ic">📤</div>
+        <div class="nm">Stereo Bounce (L/R)</div>
+        <span class="pill">→ StudioLive 64 / any board</span>
+      </div>
+      <hr>
+      <div class="hint">
+        Phase 1 routes into the church's <b>existing</b> monitor / in-ear system — no custom hardware.
+        Musicians, background singers, and lead singers hear click + guide in their ears.
+        The stereo bounce is the simple, safe fallback: one clean L/R pair into any console.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow">Integration</div>
+      <strong style="font-size:15px">ProPresenter Sync <span class="concept-tag">Placeholder · not linked in v1</span></strong>
+      <div class="small" style="margin:8px 0 12px;line-height:1.6">
+        Lyrics &amp; slides follow the live worship flow. During Spirit Flow Hold/Loop,
+        ProPresenter stays on the current section instead of running ahead.
+      </div>
+      <div class="row" style="gap:18px">
+        <span class="small"><span class="led" id="ppLed"></span>Status: <span id="ppStatus">Placeholder (not linked in v1)</span></span>
+      </div>
+      <div class="small" style="margin-top:10px">Broadcasting → Song: <b id="ppSong" style="color:var(--ink)">—</b> · Section: <b id="ppSec" style="color:var(--ink)">—</b></div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section id="about" class="view">
+    <div class="eyebrow">DLGSENSE Product</div>
+    <h2>ChurchSense</h2>
+    <div class="sub">A worship-service operating system for the local church.</div>
+
+    <div class="panel">
+      <div class="hint flow">
+        ChurchSense is the <b>brain</b> of the worship service — it plans the set, plays separated
+        stems, generates click and guide for the team's ears, keeps the house mix clean, and stays
+        in step with ProPresenter — while always leaving the worship leader free to follow where
+        the Spirit leads.
+      </div>
+
+      <div class="creed">
+        <b>ChurchSense follows worship. Worship does not follow ChurchSense.</b>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-card">
+          <h3>Phase 1 · What's in</h3>
+          <ul>
+            <li><b>Set Builder</b> — songs, order, total/elapsed/remaining, jump to any song</li>
+            <li><b>Song data</b> — title, key, BPM, lyrics, sections + lengths</li>
+            <li><b>Click + Guide</b> — count-ins, spoken cues — team ears only</li>
+            <li><b>Stem playback</b> — drums, bass, keys, pads, etc. (no lead vocal)</li>
+            <li><b>House mix</b> — stays clean of click + guide, by design</li>
+            <li><b>Routing concept</b> — house, click, guide, stereo bounce to console</li>
+            <li><b>ProPresenter sync</b> — concept-level, loose &amp; resilient</li>
+          </ul>
+        </div>
+
+        <div class="about-card">
+          <h3>Phase 1 · What's out</h3>
+          <ul>
+            <li>Custom in-ear / personal monitor <b>hardware</b></li>
+            <li>Per-member monitor mixing</li>
+            <li>Building our own stem-separation engine</li>
+            <li>Lighting, video, or recording control</li>
+            <li>Mobile remote-control for the whole team</li>
+            <li>Cloud song marketplace / multi-site sync</li>
+            <li>Automatic transcription / AI lyric generation</li>
+          </ul>
+        </div>
+
+        <div class="about-card flow">
+          <h3>✦ Why Spirit Flow Matters</h3>
+          <ul style="list-style:none;padding:0">
+            <li style="margin-bottom:10px">Most music software treats a service like a backing track:
+              press play, the song runs start to finish on a timeline.</li>
+            <li style="margin-bottom:10px"><b>Real worship does not work that way.</b>
+              The Spirit may lead the worship leader to hold a moment, pray, vamp on a bridge,
+              or extend a song past the plan.</li>
+            <li><b style="color:var(--flow)">Spirit Flow Mode</b> lets the leader linger without
+              fighting the software — and the band, the lyrics, and the clock all stay in sync.</li>
+          </ul>
+        </div>
+
+        <div class="about-card">
+          <h3>v1 · Honest Status</h3>
+          <ul>
+            <li>This is a self-contained HTML proof-of-concept. No build step, no install.</li>
+            <li>Stems are <b>synthesized tones</b> — not real separated audio files yet.</li>
+            <li>True multi-output routing needs a desktop layer (browsers can't address multiple interfaces).</li>
+            <li>ProPresenter sync is a <b>status placeholder</b>, not a live link.</li>
+            <li>Set Builder, Live/Run, and Spirit Flow (Hold / Loop / Prayer / Resume) <b>do work</b> as a POC.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footnote">
+        ChurchSense · by <span>DLGSENSE</span> · Phase 1
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ===================== DATA MODEL ===================== */
+const SECPRESETS = ["Intro","Verse 1","Chorus","Verse 2","Bridge","Vamp","Outro","Tag","Ending"];
+let songs = [
+  { title:"Way Maker", artist:"Sinach", key:"E", bpm:69, lyrics:"You are here, moving in our midst...",
+    sections:[{n:"Intro",s:16},{n:"Verse 1",s:30},{n:"Chorus",s:34},{n:"Verse 2",s:30},
+              {n:"Chorus",s:34},{n:"Bridge",s:40},{n:"Vamp",s:30},{n:"Outro",s:18}] },
+  { title:"Goodness of God", artist:"Bethel", key:"Ab", bpm:63, lyrics:"I love You, Lord...",
+    sections:[{n:"Intro",s:14},{n:"Verse 1",s:32},{n:"Chorus",s:30},{n:"Verse 2",s:32},
+              {n:"Bridge",s:44},{n:"Chorus",s:30},{n:"Outro",s:16}] },
+  { title:"Great Are You Lord", artist:"All Sons & Daughters", key:"G", bpm:72, lyrics:"You give life...",
+    sections:[{n:"Intro",s:12},{n:"Verse 1",s:28},{n:"Chorus",s:30},{n:"Bridge",s:38},
+              {n:"Vamp",s:28},{n:"Ending",s:14}] },
+];
+
+/* ===================== HELPERS ===================== */
+const $=id=>document.getElementById(id);
+const fmt=sec=>{sec=Math.max(0,Math.round(sec));const m=Math.floor(sec/60);const s=sec%60;return m+":"+String(s).padStart(2,"0");};
+const songLen=so=>so.sections.reduce((a,x)=>a+(+x.s||0),0);
+const setTotal=()=>songs.reduce((a,x)=>a+songLen(x),0);
+
+/* ===================== NAV ===================== */
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); $(b.dataset.view).classList.add("active");
+  if(b.dataset.view==="live") renderLive();
+});
+
+/* ===================== SET BUILDER ===================== */
+function renderSet(){
+  const L=$("setList"); L.innerHTML="";
+  songs.forEach((so,i)=>{
+    const d=document.createElement("div"); d.className="songcard";
+    d.innerHTML=`<div class="num">${i+1}</div>
+      <div class="meta"><div class="t">${so.title||"Untitled"}</div>
+        <div class="d">${so.artist||"—"} · Key ${so.key||"?"} · ${so.bpm||"?"} BPM · ${so.sections.length} sections · ${fmt(songLen(so))}</div></div>
+      <button class="btn" title="up">▲</button>
+      <button class="btn" title="down">▼</button>
+      <button class="btn" onclick="openSongEditor(${i})">Edit</button>
+      <button class="btn red" title="remove">✕</button>`;
+    const [up,dn,,rm]=d.querySelectorAll("button");
+    up.onclick=()=>{if(i>0){[songs[i-1],songs[i]]=[songs[i],songs[i-1]];renderSet();}};
+    dn.onclick=()=>{if(i<songs.length-1){[songs[i+1],songs[i]]=[songs[i],songs[i+1]];renderSet();}};
+    rm.onclick=()=>{if(confirm("Remove "+so.title+"?")){songs.splice(i,1);renderSet();}};
+    L.appendChild(d);
+  });
+  $("setTotalLbl").textContent="Total worship time: "+fmt(setTotal());
+  $("setCount").textContent=songs.length;
+}
+
+/* ----- inline song editor ----- */
+let editIndex=-1;
+function openSongEditor(i){
+  editIndex = (i===undefined?-1:i);
+  $("editorPanel").style.display="block";
+  $("edTitle").textContent = editIndex<0?"Add Song":"Edit Song";
+  const so = editIndex<0?{title:"",artist:"",key:"",bpm:"",lyrics:"",sections:[{n:"Intro",s:16},{n:"Verse 1",s:30},{n:"Chorus",s:32}]}:songs[editIndex];
+  $("edSongTitle").value=so.title; $("edArtist").value=so.artist; $("edKey").value=so.key;
+  $("edBpm").value=so.bpm; $("edLyrics").value=so.lyrics||"";
+  $("edSections").innerHTML="";
+  so.sections.forEach(s=>addSectionRow(s.n,s.s));
+  $("editorPanel").scrollIntoView({behavior:"smooth"});
+}
+function addSectionRow(name,len){
+  const row=document.createElement("div"); row.className="row sectionRow";
+  const opts=SECPRESETS.map(p=>`<option ${p===name?"selected":""}>${p}</option>`).join("");
+  row.innerHTML=`<select style="flex:2">${opts}<option ${SECPRESETS.includes(name)?"":"selected"}>${SECPRESETS.includes(name)||!name?"Custom":name}</option></select>
+    <input type="number" style="flex:1" placeholder="sec" value="${len||20}">
+    <button class="btn red" style="flex:none">✕</button>`;
+  row.querySelector("button").onclick=()=>row.remove();
+  $("edSections").appendChild(row);
+}
+function saveSong(){
+  const sections=[...document.querySelectorAll(".sectionRow")].map(r=>({
+    n:r.querySelector("select").value, s:+r.querySelector("input").value||0 }));
+  const so={ title:$("edSongTitle").value.trim(), artist:$("edArtist").value.trim(),
+    key:$("edKey").value.trim(), bpm:+$("edBpm").value||0, lyrics:$("edLyrics").value, sections };
+  if(!so.title){alert("Please enter a title.");return;}
+  if(editIndex<0) songs.push(so); else songs[editIndex]=so;
+  closeEditor(); renderSet();
+}
+function closeEditor(){$("editorPanel").style.display="none";}
+
+/* ===================== AUDIO ENGINE ===================== */
+let actx=null;
+function ac(){ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); return actx; }
+let clickTimer=null, nextBeat=0, beatNum=0;
+function startClick(bpm){
+  stopClick();
+  const ctx=ac(); const interval=60/(bpm||72);
+  nextBeat=ctx.currentTime+0.06; beatNum=0;
+  const tick=()=>{
+    while(nextBeat < ctx.currentTime+0.15){
+      if($("optClick").checked && playing) scheduleClick(nextBeat, beatNum%4===0);
+      nextBeat+=interval; beatNum++;
+    }
+    clickTimer=setTimeout(tick,40);
+  };
+  tick();
+}
+function scheduleClick(t,accent){
+  const ctx=ac(); const o=ctx.createOscillator(), g=ctx.createGain();
+  o.frequency.value=accent?1600:1000; g.gain.value=0.0001;
+  o.connect(g); g.connect(ctx.destination);   // <-- EARS bus only (never house)
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(accent?0.5:0.28,t+0.001);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
+  o.start(t); o.stop(t+0.06);
+}
+function stopClick(){ if(clickTimer){clearTimeout(clickTimer);clickTimer=null;} }
+
+/* simulated pad/stem drone so there's something audible */
+let padOsc=null,padGain=null;
+function startPad(key){
+  stopPad(); const ctx=ac();
+  padGain=ctx.createGain(); padGain.gain.value=0; padGain.connect(ctx.destination);
+  padOsc=ctx.createOscillator(); padOsc.type="sine"; padOsc.frequency.value=110;
+  const o2=ctx.createOscillator(); o2.type="sine"; o2.frequency.value=164.81;
+  padOsc.connect(padGain); o2.connect(padGain); padOsc.start(); o2.start();
+  padGain.gain.linearRampToValueAtTime(0.06,ctx.currentTime+1.2);
+  padOsc._o2=o2;
+}
+function stopPad(){ if(padGain){padGain.gain.linearRampToValueAtTime(0,ac().currentTime+0.4);}
+  if(padOsc){const o2=padOsc._o2; const p=padOsc; setTimeout(()=>{try{p.stop();o2&&o2.stop();}catch(e){}},500); padOsc=null;} }
+
+function speak(text){
+  if(!$("optSpeak").checked || !window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text); u.rate=1; u.pitch=1; u.volume=1;
+  speechSynthesis.speak(u);   // guide cue -> ears only conceptually
+}
+
+/* ===================== TRANSPORT / TIMING ===================== */
+let playing=false, curSong=0, curSec=0, secElapsed=0, totalElapsed=0, flowAdded=0;
+let flowMode="follow"; // follow | hold | loop | prayer
+let lastTick=0, rafId=null, counting=false, countLeft=0;
+
+function curSongObj(){return songs[curSong];}
+function curSecObj(){return curSongObj()?curSongObj().sections[curSec]:null;}
+
+function togglePlay(){ if(playing){ pausePlay(); } else { startPlay(); } }
+function startPlay(){
+  if(!songs.length){alert("Add a song first.");return;}
+  ac().resume&&ac().resume();
+  playing=true; $("btnPlay").textContent="⏸ Pause";
+  $("ledEar").classList.add("ear"); $("ledHouse").classList.add("on");
+  $("ppLed").classList.add("on"); $("ppStatus").textContent="Following live flow (simulated)";
+  startPad(curSongObj().key);
+  // count-in: 4 beats
+  counting=true; countLeft=4; startClick(curSongObj().bpm);
+  $("nowCue").textContent="Count-in… 4";
+  lastTick=performance.now(); loop();
+  speak("Count in");
+}
+function pausePlay(){ playing=false; $("btnPlay").textContent="▶ Resume"; stopClick();
+  if(rafId)cancelAnimationFrame(rafId); }
+function stopAll(){
+  playing=false; counting=false; $("btnPlay").textContent="▶ Start";
+  stopClick(); stopPad(); if(rafId)cancelAnimationFrame(rafId);
+  curSong=0;curSec=0;secElapsed=0;totalElapsed=0;flowAdded=0;flowMode="follow";
+  $("ledEar").classList.remove("ear"); $("ledHouse").classList.remove("on");
+  $("ppLed").classList.remove("on"); $("ppStatus").textContent="Placeholder (not linked in v1)";
+  $("nowbar").classList.remove("flowon"); $("flowBadge").innerHTML="";
+  renderLive(); $("nowCue").textContent="Press Start";
+}
+
+function loop(){
+  const now=performance.now(); const dt=(now-lastTick)/1000; lastTick=now;
+  if(playing){
+    if(counting){
+      // advance count-in by beats
+      const beatDur=60/(curSongObj().bpm||72);
+      secElapsed+=dt;
+      const remainingBeats=Math.ceil((4*beatDur - secElapsed)/beatDur);
+      if(remainingBeats>0){ $("nowCue").textContent="Count-in… "+remainingBeats; }
+      if(secElapsed>=4*beatDur){ counting=false; secElapsed=0; enterSection(true); }
+    } else {
+      secElapsed+=dt;
+      if(flowMode==="follow"){
+        totalElapsed+=dt;
+        const len=curSecObj().s;
+        if(secElapsed>=len){ advanceSection(); }
+      } else {
+        // hold / loop / prayer -> time is "added", planned clock paused
+        flowAdded+=dt;
+        if(flowMode==="loop"){
+          const len=curSecObj().s;
+          if(secElapsed>=len){ secElapsed=0; cueSection(true); } // seamless re-cue
+        }
+      }
+    }
+    updateLiveUI();
+  }
+  rafId=requestAnimationFrame(loop);
+}
+
+function enterSection(announce){ secElapsed=0; cueSection(announce); updateLiveUI(); }
+function cueSection(loopRecue){
+  const s=curSecObj(); if(!s)return;
+  $("nowCue").textContent=(loopRecue?"⟳ ":"")+s.n.toUpperCase();
+  $("ppSong").textContent=curSongObj().title; $("ppSec").textContent=s.n;
+  let say=s.n;
+  const map={"Verse 1":"Verse one","Verse 2":"Verse two"};
+  if(map[s.n])say=map[s.n];
+  if(loopRecue)say="Repeat "+say;
+  speak(say);
+}
+function advanceSection(){
+  secElapsed=0;
+  if(curSec < curSongObj().sections.length-1){ curSec++; cueSection(false); }
+  else { // next song
+    if(curSong < songs.length-1){ curSong++; curSec=0; startPad(curSongObj().key);
+      startClick(curSongObj().bpm); cueSection(false); }
+    else { $("nowCue").textContent="✓ Set complete"; pausePlay(); }
+  }
+  updateLiveUI();
+}
+
+/* jump */
+function jumpToSong(i){ curSong=i; curSec=0; secElapsed=0;
+  if(playing){ startPad(curSongObj().key); startClick(curSongObj().bpm); cueSection(false); }
+  updateLiveUI(); renderLive(); }
+function jumpToSection(i){ curSec=i; secElapsed=0;
+  if(playing) cueSection(false); updateLiveUI(); renderLive(); }
+
+/* ===================== SPIRIT FLOW ===================== */
+function setFlow(mode,label){
+  flowMode=mode;
+  const on = mode!=="follow";
+  $("nowbar").classList.toggle("flowon",on);
+  $("flowBadge").innerHTML = on?'<span class="flowbadge">SPIRIT FLOW</span>':'';
+  $("flowState").innerHTML = "<b>State:</b> "+label;
+}
+function flowHold(){ if(!playing)return; setFlow("hold","Holding "+curSecObj().n+" — automatic transitions paused."); }
+function flowLoop(){ if(!playing)return; secElapsed=0; setFlow("loop","Looping "+curSecObj().n+" — click, guide, stems &amp; lyrics stay locked."); cueSection(true); }
+function flowPrayer(){ if(!playing)return; setFlow("prayer","Prayer / pad sustaining — worship leader praying. Take your time."); $("nowCue").textContent="🙏 PRAYER"; speak("Prayer"); }
+function flowResume(){ if(!playing)return; setFlow("follow","Following the planned set. Service time recalculated."); secElapsed=0; cueSection(false); }
+
+/* ===================== LIVE UI ===================== */
+function renderLive(){
+  // order
+  const O=$("liveOrder"); O.innerHTML="";
+  songs.forEach((so,i)=>{
+    const d=document.createElement("div"); d.className="songcard"+(i===curSong?" cur":"");
+    d.style.cursor="pointer";
+    d.innerHTML=`<div class="num">${i+1}</div><div class="meta"><div class="t">${so.title}</div>
+      <div class="d">Key ${so.key} · ${so.bpm} BPM · ${fmt(songLen(so))}</div></div>
+      ${i===curSong?'<span class="pill" style="border-color:var(--gold);color:var(--gold)">Song '+(i+1)+' of '+songs.length+'</span>':''}`;
+    d.onclick=()=>jumpToSong(i); O.appendChild(d);
+  });
+  // sections
+  const S=$("liveSections"); S.innerHTML="";
+  const so=curSongObj(); if(so){ so.sections.forEach((s,i)=>{
+    const d=document.createElement("div");
+    d.className="sec"+(i===curSec?" cur":"")+(i<curSec?" done":"");
+    d.innerHTML=`<span class="nm">${s.n}</span><span class="pill">${fmt(s.s)}</span>`;
+    d.onclick=()=>jumpToSection(i); S.appendChild(d);
+  });}
+  $("nowSong").textContent= so? so.title+"  ·  Key "+so.key+"  ·  "+so.bpm+" BPM" : "—";
+  updateLiveUI();
+}
+function updateLiveUI(){
+  const total=setTotal();
+  $("stTotal").textContent=fmt(total);
+  $("stElapsed").textContent=fmt(totalElapsed);
+  $("stRemain").textContent=fmt(total-totalElapsed);
+  $("stFlow").textContent=fmt(flowAdded);
+  const s=curSecObj();
+  if(s){ const p=Math.min(100,(secElapsed/s.s)*100); $("nowProg").style.width=p+"%"; }
+  // refresh current-section highlight cheaply
+  const secs=$("liveSections").children;
+  for(let i=0;i<secs.length;i++){ secs[i].classList.toggle("cur",i===curSec);
+    secs[i].classList.toggle("done",i<curSec); }
+}
+
+/* ===================== INIT ===================== */
+renderSet(); renderLive();
+</script>
+</body>
+</html>
