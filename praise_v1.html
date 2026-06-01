@@ -477,6 +477,49 @@
     box-shadow:0 0 16px -4px var(--gold-glow);
   }
 
+  /* ============== IN-EARS PAGE ============== */
+  .ia-summary{display:flex;gap:22px;flex-wrap:wrap;align-items:center}
+  .ia-sum .k{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mut);font-weight:600}
+  .ia-sum .v{font-size:14px;font-weight:700;color:var(--ink);margin-top:3px}
+  .ia-summary .earlock{margin-left:auto}
+  .ia-main{display:grid;grid-template-columns:236px 1fr;gap:16px;align-items:start}
+  @media(max-width:820px){.ia-main{grid-template-columns:1fr}}
+  .iarole{
+    display:flex;align-items:center;gap:10px;padding:11px 13px;
+    border:1px solid var(--line);border-radius:12px;margin-bottom:8px;cursor:pointer;
+    transition:all .15s;background:rgba(20,28,48,0.4);
+  }
+  .iarole:hover{border-color:var(--line-strong)}
+  .iarole.cur{
+    border-color:var(--cyan);
+    background:linear-gradient(180deg,rgba(95,210,228,0.12),rgba(20,28,48,0.5));
+    box-shadow:0 0 0 1px rgba(95,210,228,0.25) inset;
+  }
+  .iarole .ic{font-size:18px;flex:none}
+  .iarole .nm{font-weight:700;font-size:13px}
+  .mixgrid{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .mixrow{
+    display:grid;grid-template-columns:120px 58px 1fr 42px;gap:12px;align-items:center;
+    padding:10px 12px;border:1px solid var(--line);border-radius:11px;
+    background:rgba(8,12,22,0.4);opacity:0.55;transition:opacity .15s,border-color .15s;
+  }
+  .mixrow.on{opacity:1;border-color:rgba(95,210,228,0.30)}
+  .mxname{font-weight:700;font-size:13px}
+  .mxtog{
+    font-size:11px;font-weight:700;padding:6px 0;border-radius:8px;border:1px solid var(--line);
+    background:rgba(28,38,62,0.7);color:var(--ink-dim);cursor:pointer;letter-spacing:0.5px;
+  }
+  .mixrow.on .mxtog{border-color:var(--cyan);color:var(--cyan)}
+  .mxlevel{width:100%;accent-color:var(--cyan)}
+  .mxnum{font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;color:var(--cyan);text-align:right}
+  .ia-intgrp{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+  .ia-intgrp .k{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mut);font-weight:600;width:90px;flex:none}
+  .tagq{
+    font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mut);
+    border:1px dashed var(--mut);border-radius:999px;padding:2px 6px;margin-left:5px;
+  }
+  #iaTrackFile{font-size:12px;color:var(--ink-dim)}
+
   /* ============== ROUTING ============== */
   .route{
     display:flex;align-items:center;gap:14px;
@@ -679,6 +722,7 @@
 <nav>
   <button data-view="set" class="active">Set Builder</button>
   <button data-view="live">Live / Run</button>
+  <button data-view="ears">In-Ears</button>
   <button data-view="routing">Routing &amp; Integration</button>
   <button data-view="about">About</button>
 </nav>
@@ -771,11 +815,11 @@
       </div>
     </div>
 
-    <!-- IN-EAR MONITOR — Team Ears foundation (status, not hardware routing) -->
+    <!-- IN-EAR QUICK STATUS — full control lives on the In-Ears page -->
     <div class="panel earmon" id="earMon">
       <div class="row" style="justify-content:space-between;align-items:flex-start">
         <div>
-          <div class="eyebrow">Team Ears · In-Ear Monitor</div>
+          <div class="eyebrow">Team Ears · Quick Status</div>
           <strong style="font-size:15px">What the team hears</strong>
         </div>
         <span class="earlock" id="earLock">Standby</span>
@@ -786,10 +830,8 @@
         <span class="earchip house"><span class="led on"></span>House → worship (clean)</span>
       </div>
       <div class="earcue" id="earCue">Cue: —</div>
-      <div class="small earnote"><b>Separate unit:</b> PRAISE personal in-ear control is a separate layer
-        from the StudioLive monitor mix — each musician shapes their own PRAISE in-ears. PRAISE connects
-        alongside the board; the StudioLive stays the live board. This build shows monitor status only —
-        real hardware integration and separate audio routing are future work.</div>
+      <div class="small earnote">Quick glance only — open the <b>In-Ears</b> page for personal role mixes,
+        track test, and integration. PRAISE stays a separate layer; the StudioLive remains the live board.</div>
     </div>
 
     <!-- SPIRIT FLOW — elevated, sacred -->
@@ -825,6 +867,102 @@
         <strong style="font-size:15px">Worship Order</strong>
         <div class="small" style="margin:6px 0 12px">Tap a song to jump (e.g. Song 2 of 3).</div>
         <div id="liveOrder"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ IN-EARS (dedicated personal in-ear control) ============ -->
+  <section id="ears" class="view">
+    <div class="eyebrow">Phase 1 · Personal In-Ear Control</div>
+    <h2>In-Ears</h2>
+    <div class="sub">Your own personal in-ear control layer — separate from the StudioLive monitor mix.</div>
+
+    <!-- SUMMARY STRIP -->
+    <div class="panel ia-summary">
+      <div class="ia-sum"><div class="k">Role</div><div class="v" id="iaRoleLbl">—</div></div>
+      <div class="ia-sum"><div class="k">Cue</div><div class="v" id="iaCueNow">—</div></div>
+      <div class="ia-sum"><div class="k">Next</div><div class="v" id="iaCueNext">—</div></div>
+      <div class="ia-sum"><div class="k">Track</div><div class="v" id="iaTrackStat">No track loaded</div></div>
+      <div class="ia-sum"><div class="k">Connection</div><div class="v" id="iaConnLbl">Concept Mode</div></div>
+      <span class="earlock" id="iaLock">Standby</span>
+    </div>
+
+    <div class="ia-main">
+      <!-- LEFT: ROLE SELECTOR -->
+      <div class="panel ia-roles">
+        <div class="eyebrow">Role</div>
+        <div class="small" style="margin:6px 0 12px">Pick who this device is for.</div>
+        <div id="iaRoles"></div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div>
+        <!-- PERSONAL MIX GRID -->
+        <div class="panel">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div><div class="eyebrow">Personal Mix</div><strong style="font-size:15px" id="iaRoleTitle">—</strong></div>
+            <span class="small" id="iaSaved">—</span>
+          </div>
+          <div class="mixgrid" id="iaGrid"></div>
+          <div class="row" style="margin-top:14px;gap:10px">
+            <button class="btn" onclick="resetRole()">Reset role mix</button>
+            <button class="btn" onclick="resetAllRoles()">Reset all roles</button>
+          </div>
+          <div class="small earnote">Mix levels are a personal-control concept — each source's on/off + level
+            shapes what this role wants in their PRAISE in-ears. No per-source audio routing is active yet.</div>
+        </div>
+
+        <!-- TRACK TEST -->
+        <div class="panel">
+          <div class="eyebrow">Track Test <span class="concept-tag">Local · browser only</span></div>
+          <strong style="font-size:15px">Load a local track to test</strong>
+          <div class="small" style="margin:8px 0 12px">Local browser playback for testing only. Nothing is uploaded
+            or committed, and there is no separate-output routing yet — the track plays on your default browser output.</div>
+          <input type="file" id="iaTrackFile" accept="audio/*" onchange="loadTrack(event)">
+          <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn cyan" onclick="trackPlay()">▶ Play Track</button>
+            <button class="btn" onclick="trackPauseTrack()">⏸ Pause</button>
+            <button class="btn" onclick="trackStopTrack()">■ Stop</button>
+            <span class="small">File: <b id="iaTrackName" style="color:var(--ink)">none</b>
+              · <span id="iaTrackPlayState">idle</span></span>
+          </div>
+          <audio id="iaAudio" preload="none"></audio>
+        </div>
+
+        <!-- INTEGRATION TARGETS -->
+        <div class="panel">
+          <div class="eyebrow">Integration Targets <span class="concept-tag">Concept · not connected</span></div>
+          <div class="ia-intgrp"><div class="k">Board</div>
+            <span class="earchip">StudioLive 64S <span class="tagq">Starter</span></span>
+            <span class="earchip">Future Board <span class="tagq">Future</span></span>
+          </div>
+          <div class="ia-intgrp"><div class="k">DAW / Audio</div>
+            <span class="earchip">Pro Tools <span class="tagq">Current</span></span>
+            <span class="earchip">Logic Pro <span class="tagq">Future</span></span>
+            <span class="earchip">Ableton Live <span class="tagq">Future</span></span>
+            <span class="earchip">Reason 14 <span class="tagq">Future</span></span>
+            <span class="earchip">Mac Audio <span class="tagq">Future</span></span>
+          </div>
+          <div class="ia-intgrp"><div class="k">Stream</div>
+            <span class="earchip">OBS <span class="tagq">Mac / Pro Tools path</span></span>
+          </div>
+          <div class="ia-intgrp"><div class="k">Connection</div>
+            <span class="earchip cmode on" id="cmIaConcept" onclick="setConnMode('concept')">Concept Mode</span>
+            <span class="earchip cmode" id="cmIaBoard" onclick="setConnMode('board')">StudioLive Target</span>
+            <span class="earchip cmode" id="cmIaDaw" onclick="setConnMode('daw')">DAW Path</span>
+            <span class="earchip cmode" id="cmIaHw" onclick="setConnMode('hw')">Future Hardware Unit</span>
+          </div>
+          <div class="earcue" id="connStatusIA">Concept Mode — nothing is connected yet. PRAISE is modeling the architecture, not controlling hardware.</div>
+        </div>
+
+        <!-- HONEST NOTE -->
+        <div class="hint">
+          <b>PRAISE is a separate in-ear control layer.</b> The StudioLive 64S remains the board / live-output
+          authority. Pro Tools is the current DAW path; Logic Pro, Ableton Live, Reason 14, and Mac Audio are
+          future DAW/audio targets; OBS receives stream audio through the Mac / Pro Tools path. This page is a
+          control <b>foundation</b> — real hardware routing, separate outputs, deep board integration, and DAW
+          control are future work, not claimed here.
+        </div>
       </div>
     </div>
   </section>
@@ -1084,6 +1222,7 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
   b.classList.add("active"); $(b.dataset.view).classList.add("active");
   if(b.dataset.view==="live") renderLive();
+  if(b.dataset.view==="ears") renderEars();
 });
 
 /* ===================== SET BUILDER ===================== */
@@ -1334,22 +1473,134 @@ function updateEars(){
     else { const nx=nextSecName(); if(nx) cue+="  ·  next: "+nx; }
   } else if(s){ cue="Ready — first up: "+s.n.toUpperCase(); }
   $("earCue").textContent="Cue: "+cue;
+  // mirror into the dedicated In-Ears page summary strip (if present)
+  if($("iaLock")){
+    $("iaLock").textContent=lock.textContent; $("iaLock").className=lock.className;
+    const role=(typeof ROLES!=="undefined")?ROLES.find(r=>r.id===curRole):null;
+    if($("iaRoleLbl")) $("iaRoleLbl").textContent= role?role.name:"—";
+    if($("iaCueNow")) $("iaCueNow").textContent = s? (playing? s.n : ("Ready · "+s.n)) : "—";
+    if($("iaCueNext")) $("iaCueNext").textContent = nextSecName()||"—";
+    if($("iaTrackStat")) $("iaTrackStat").textContent = trackLoaded? ("Loaded — "+trackName) : "No track loaded";
+    if($("iaConnLbl")) $("iaConnLbl").textContent = connLabel(connMode);
+  }
 }
 /* ===================== CONNECTION MODE (concept only — no real hardware) ===================== */
 let connMode="concept";
+function connLabel(m){ return ({concept:"Concept Mode",board:"StudioLive 64S Target",daw:"DAW / Pro Tools Path",hw:"Future Hardware Unit"})[m]||"Concept Mode"; }
 function setConnMode(mode){
   connMode=mode;
-  const ids={concept:"cmConcept",board:"cmBoard",daw:"cmDaw",hw:"cmHw"};
-  Object.values(ids).forEach(id=>{ const e=$(id); if(e) e.classList.remove("on"); });
-  const cur=$(ids[mode]); if(cur) cur.classList.add("on");
+  // keep both the Routing page and the In-Ears page chip sets in sync
+  const sets=[{concept:"cmConcept",board:"cmBoard",daw:"cmDaw",hw:"cmHw"},
+              {concept:"cmIaConcept",board:"cmIaBoard",daw:"cmIaDaw",hw:"cmIaHw"}];
+  sets.forEach(ids=>{
+    Object.values(ids).forEach(id=>{ const e=$(id); if(e) e.classList.remove("on"); });
+    const cur=$(ids[mode]); if(cur) cur.classList.add("on");
+  });
   const msg={
     concept:"Concept Mode — nothing is connected yet. PRAISE is modeling the architecture, not controlling hardware.",
     board:"StudioLive 64S Target (concept) — PRAISE would connect alongside the board. The StudioLive stays the live & house authority; PRAISE never overrides it.",
     daw:"DAW / Pro Tools Path (concept) — models the USB capture into the Mac feeding Pro Tools and the OBS stream. No DAW control is active.",
     hw:"Future Hardware Unit (concept) — a dedicated PRAISE personal in-ear unit, separate from the board. Not built yet."
   };
-  const el=$("connStatus"); if(el) el.textContent=msg[mode]||msg.concept;
+  ["connStatus","connStatusIA"].forEach(id=>{ const el=$(id); if(el) el.textContent=msg[mode]||msg.concept; });
+  if($("iaConnLbl")) $("iaConnLbl").textContent=connLabel(mode);
 }
+/* ===================== IN-EARS PAGE (personal mix · concept control) ===================== */
+const ROLES=[
+  {id:"leader", icon:"🎙️", name:"Worship Leader"},
+  {id:"drums",  icon:"🥁", name:"Drummer"},
+  {id:"bass",   icon:"🎸", name:"Bass"},
+  {id:"keys",   icon:"🎹", name:"Keys"},
+  {id:"guitar", icon:"🎶", name:"Guitar"},
+  {id:"bgv",    icon:"🎵", name:"BGV"},
+  {id:"tracks", icon:"🎚️", name:"Tracks Operator"},
+];
+const MIXSOURCES=[
+  {id:"track",   name:"Track / Music"},
+  {id:"click",   name:"Click"},
+  {id:"guide",   name:"Guide"},
+  {id:"cues",    name:"Cues"},
+  {id:"pad",     name:"Pad"},
+  {id:"talkback",name:"Talkback"},
+];
+const ROLE_DEFAULTS={
+  leader:{track:60,click:35,guide:25,cues:80,pad:55,talkback:70},
+  drums: {track:65,click:95,guide:40,cues:70,pad:20,talkback:60},
+  bass:  {track:70,click:85,guide:35,cues:65,pad:30,talkback:55},
+  keys:  {track:60,click:55,guide:50,cues:75,pad:80,talkback:55},
+  guitar:{track:68,click:70,guide:45,cues:70,pad:40,talkback:55},
+  bgv:   {track:55,click:45,guide:85,cues:75,pad:50,talkback:65},
+  tracks:{track:80,click:75,guide:70,cues:80,pad:60,talkback:75},
+};
+let curRole="leader";
+let earMix={};
+let trackLoaded=false, trackName="";
+
+function defaultMixFor(roleId){
+  const d=ROLE_DEFAULTS[roleId]||ROLE_DEFAULTS.leader; const m={};
+  MIXSOURCES.forEach(s=>{ const lvl=d[s.id]||0; m[s.id]={on:lvl>0, level:lvl}; });
+  return m;
+}
+function ensureMix(){ ROLES.forEach(r=>{ if(!earMix[r.id]) earMix[r.id]=defaultMixFor(r.id); }); }
+function loadMix(){
+  try{ const raw=localStorage.getItem("praiseEarMix");
+    if(raw){ const o=JSON.parse(raw); if(o&&o.earMix) earMix=o.earMix; if(o&&o.curRole) curRole=o.curRole; }
+  }catch(e){}
+  ensureMix();
+}
+function saveMix(){
+  try{ localStorage.setItem("praiseEarMix", JSON.stringify({curRole,earMix})); markSaved("Saved to this browser ✓"); }
+  catch(e){ markSaved("Save unavailable (private mode)"); }
+}
+function markSaved(txt){ const el=$("iaSaved"); if(el) el.textContent=txt; }
+
+function renderEars(){
+  ensureMix();
+  const RS=$("iaRoles");
+  if(RS){ RS.innerHTML=""; ROLES.forEach(r=>{
+    const d=document.createElement("div"); d.className="iarole"+(r.id===curRole?" cur":"");
+    d.innerHTML=`<span class="ic">${r.icon}</span><span class="nm">${r.name}</span>`;
+    d.onclick=()=>selectRole(r.id); RS.appendChild(d);
+  });}
+  const role=ROLES.find(r=>r.id===curRole);
+  if($("iaRoleTitle")) $("iaRoleTitle").textContent= role? role.name+" mix" : "—";
+  renderMixGrid();
+  updateEars();
+}
+function selectRole(id){ curRole=id; saveMix(); renderEars(); }
+function renderMixGrid(){
+  const G=$("iaGrid"); if(!G)return;
+  const mix=earMix[curRole]||defaultMixFor(curRole); G.innerHTML="";
+  MIXSOURCES.forEach(s=>{
+    const v=mix[s.id]||{on:false,level:0};
+    const row=document.createElement("div"); row.className="mixrow"+(v.on?" on":"");
+    row.innerHTML=`<div class="mxname">${s.name}</div>`+
+      `<button class="mxtog" data-s="${s.id}">${v.on?"On":"Off"}</button>`+
+      `<input type="range" min="0" max="100" value="${v.level}" class="mxlevel" data-s="${s.id}" aria-label="${s.name} level">`+
+      `<span class="mxnum" id="mxnum-${s.id}">${v.level}</span>`;
+    G.appendChild(row);
+  });
+  G.querySelectorAll(".mxtog").forEach(b=>b.onclick=()=>toggleSource(b.dataset.s));
+  G.querySelectorAll(".mxlevel").forEach(r=>r.oninput=()=>setLevel(r.dataset.s,+r.value));
+}
+function toggleSource(sid){ const m=earMix[curRole][sid]; if(!m)return; m.on=!m.on; saveMix(); renderMixGrid(); }
+function setLevel(sid,val){ const m=earMix[curRole][sid]; if(!m)return; m.level=val; const n=$("mxnum-"+sid); if(n) n.textContent=val; saveMix(); }
+function resetRole(){ earMix[curRole]=defaultMixFor(curRole); saveMix(); renderEars(); }
+function resetAllRoles(){ earMix={}; ensureMix(); saveMix(); renderEars(); }
+
+/* track test — local, browser-only playback (no upload, no commit, no routing) */
+function loadTrack(e){
+  const f=e&&e.target&&e.target.files&&e.target.files[0]; if(!f)return;
+  try{ const a=$("iaAudio"); a.src=URL.createObjectURL(f); trackName=f.name; trackLoaded=true; }
+  catch(err){ return; }
+  if($("iaTrackName")) $("iaTrackName").textContent=f.name;
+  if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="loaded";
+  updateEars();
+}
+function trackPlay(){ if(!trackLoaded)return; const a=$("iaAudio"); if(a){ a.play().then(()=>{ if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="playing"; }).catch(()=>{}); } }
+function trackPauseTrack(){ const a=$("iaAudio"); if(a){ a.pause(); if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="paused"; } }
+function trackStopTrack(){ const a=$("iaAudio"); if(a){ a.pause(); try{ a.currentTime=0; }catch(e){} if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="stopped"; } }
+
 function flowHold(){ if(!playing)return; setFlow("hold","Holding "+curSecObj().n+" — automatic transitions paused."); }
 function flowLoop(){ if(!playing)return; secElapsed=0; setFlow("loop","Looping "+curSecObj().n+" — click, guide, stems &amp; lyrics stay locked."); cueSection(true); }
 function flowPrayer(){ if(!playing)return; setFlow("prayer","Prayer / pad sustaining — worship leader praying. Take your time."); $("nowCue").textContent="🙏 PRAYER"; speak("Prayer"); }
@@ -1395,7 +1646,7 @@ function updateLiveUI(){
 }
 
 /* ===================== INIT ===================== */
-renderSet(); renderLive();
+renderSet(); renderLive(); loadMix(); renderEars();
 </script>
 </body>
 </html>
