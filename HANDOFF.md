@@ -97,11 +97,48 @@ Web Audio **output produced no audible sound**. Music (HTMLAudioElement) and gui
 
 ---
 
-## G. Next recommended lane
+## G. Core Rehearsal Stability Test — PASSED (2026-06-02)
 
-**Full rehearsal stability test:** run a complete song / set start to finish and confirm that
-**music, guidance, click, BPM source (Manual/Detected/Planned), and the bar counter stay locked**
-from start to finish — across song changes, Spirit Flow, and meter (4/4 ↔ 3/4) switches.
+**Core Rehearsal Stability Test passed: music, guidance, click, BPM source, Live Run meter, and
+In-Ears meter worked together during the test.**
+
+Scope verified (click audibility is DLG-confirmed and protected; the full rehearsal flow was traced
+end-to-end and is intact / non-regressed):
+- Load track → Start → music + guidance + audible click together.
+- Click controlled by the existing Click checkbox.
+- Bar counter correct; Live Run and In-Ears meters match (shared render, one scheduler).
+- 4/4 → `Bar N` + cells `1 2 3 4`; 3/4 → `Bar N` + cells `1 2 3`.
+- Analyze Tempo auto-applies detected BPM; Manual BPM overrides (Manual → Detected → Planned).
+- Pause / Resume / Stop: music, click, and meters recover; Stop resets music to 0, stops the click,
+  and resets both meters to `Bar —`.
+
+**Known behavior (not a regression, not changed):** on **Resume**, the click and bar counter restart
+from `Bar 1` with a fresh count-in while the music resumes from its paused position. This is existing
+count-in behavior. If DLG wants resume to continue the prior bar count instead, that is a separate,
+approved change — do not alter it as a side effect of unrelated work.
+
+---
+
+## H. Future Integration Readiness — Studio 64s / Hardware Test Later
+
+**Full hardware integration is NOT certified yet.** DLG expects deeper integration testing to require
+the actual **PreSonus StudioLive 64s** hardware. The current build can prepare the lane, but must
+**not** claim hardware routing is complete.
+
+When the StudioLive 64s is available, the future hardware test should verify:
+1. Output routing
+2. Click routing
+3. Guide routing
+4. Music routing
+5. Performer / in-ear mix behavior
+6. Latency
+7. Drift
+8. Start / Pause / Stop recovery
+9. No click dropout
+10. No guide / click conflict
+
+Until that test is done and approved: no hardware routing, no DAW routing, no stems. PRAISE remains a
+separate control/rehearsal layer; the StudioLive 64s stays the live/house authority.
 
 ---
 
@@ -111,3 +148,4 @@ from start to finish — across song changes, Spirit Flow, and meter (4/4 ↔ 3/
 |--------|---------|
 | `6df7e27` | Click routed through the proven HTMLAudio WAV tick path — **confirmed audible** |
 | `5e1c0a9` | Protected checkpoint note (this handoff originated here) |
+| `056c1c4` | Expanded into full project handoff |
