@@ -1350,12 +1350,15 @@ function startPlay(){
   $("nowCue").textContent="Count-in… 4";
   lastTick=performance.now(); loop();
   speak("Count in"); updateEars();
+  if(trackLoaded) trackPlay();   // main transport plays the loaded local song too (local/browser only)
 }
 function pausePlay(){ playing=false; $("btnPlay").textContent="▶ Resume"; stopClick();
-  if(rafId)cancelAnimationFrame(rafId); }
+  if(rafId)cancelAnimationFrame(rafId);
+  if(trackLoaded) trackPauseTrack(); }
 function stopAll(){
   playing=false; counting=false; $("btnPlay").textContent="▶ Start";
   stopClick(); stopPad(); if(rafId)cancelAnimationFrame(rafId);
+  if(trackLoaded) trackStopTrack();   // reset the loaded local song to the start, alongside service reset
   curSong=0;curSec=0;secElapsed=0;totalElapsed=0;flowAdded=0;momentElapsed=0;flowMode="follow";
   $("ledEar").classList.remove("ear"); $("ledHouse").classList.remove("on");
   $("ppLed").classList.remove("on"); $("ppStatus").textContent="Placeholder (not linked in v1)";
