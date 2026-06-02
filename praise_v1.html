@@ -234,6 +234,7 @@
     pointer-events:none;
   }
   button.btn.big{padding:14px 22px;font-size:14px;border-radius:13px}
+  button.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
 
   /* ============== SONG CARDS ============== */
   .songcard{
@@ -926,6 +927,12 @@
             <span class="small">File: <b id="iaTrackName" style="color:var(--ink)">none</b>
               · <span id="iaTrackPlayState">idle</span></span>
           </div>
+          <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn" id="iaAnalyzeBtn" onclick="analyzeTempo()" disabled>Analyze Tempo</button>
+            <span class="small">Tempo: <b id="iaBpm" style="color:var(--cyan)">Not analyzed</b></span>
+          </div>
+          <div class="small earnote">Tempo detection is an estimate (browser-side analysis of your local file).
+            The click does not follow the detected tempo yet — this phase only detects and displays BPM.</div>
           <audio id="iaAudio" preload="none"></audio>
         </div>
 
@@ -1537,7 +1544,7 @@ const ROLE_DEFAULTS={
 };
 let curRole="leader";
 let earMix={};
-let trackLoaded=false, trackName="";
+let trackLoaded=false, trackName="", trackFile=null, detectedBpm=null;
 
 function defaultMixFor(roleId){
   const d=ROLE_DEFAULTS[roleId]||ROLE_DEFAULTS.leader; const m={};
@@ -1596,9 +1603,72 @@ function loadTrack(e){
   const f=e&&e.target&&e.target.files&&e.target.files[0]; if(!f)return;
   try{ const a=$("iaAudio"); a.src=URL.createObjectURL(f); trackName=f.name; trackLoaded=true; }
   catch(err){ return; }
+  trackFile=f; detectedBpm=null;                 // retained for tempo analysis (separate from playback)
   if($("iaTrackName")) $("iaTrackName").textContent=f.name;
   if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="loaded";
+  if($("iaBpm")) $("iaBpm").textContent="Not analyzed";
+  if($("iaAnalyzeBtn")) $("iaAnalyzeBtn").disabled=false;
   updateEars();
+}
+
+/* ===== Tempo/BPM detection — browser-side estimate only; does NOT change the click ===== */
+function analyzeTempo(){
+  if(!trackFile) return;
+  const out=$("iaBpm"), btn=$("iaAnalyzeBtn");
+  if(out) out.textContent="Analyzing…";
+  if(btn) btn.disabled=true;
+  Promise.resolve()
+    .then(()=> trackFile.arrayBuffer())
+    .then(buf => ac().decodeAudioData(buf))
+    .then(audioBuffer => detectBpm(audioBuffer))
+    .then(bpm => {
+      detectedBpm = bpm;
+      if(out) out.textContent = bpm ? ("Detected: "+bpm+" BPM (estimate)") : "Could not detect reliably";
+    })
+    .catch(()=>{ if(out) out.textContent="Could not detect reliably"; })
+    .then(()=>{ if(btn) btn.disabled = !trackLoaded; });
+}
+function detectBpm(audioBuffer){
+  const OAC = window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  if(!OAC || !audioBuffer || !audioBuffer.length) return Promise.resolve(null);
+  // analyze up to first 90s of a low-passed (kick/bass) mono render — keeps it light, won't freeze the UI
+  const maxLen = Math.min(audioBuffer.length, Math.floor(audioBuffer.sampleRate*90));
+  let off; try{ off=new OAC(1, maxLen, audioBuffer.sampleRate); }catch(e){ return Promise.resolve(null); }
+  const src=off.createBufferSource(); src.buffer=audioBuffer;
+  const lp=off.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=150; lp.Q.value=1;
+  const hp=off.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=90;  hp.Q.value=1;
+  src.connect(lp); lp.connect(hp); hp.connect(off.destination); src.start(0);
+  return off.startRendering().then(rendered=>{
+    const data=rendered.getChannelData(0), sr=rendered.sampleRate;
+    return bpmFromPeaks(collectPeaks(data,sr), sr);
+  }).catch(()=>null);
+}
+function collectPeaks(data, sr){
+  let max=0; for(let i=0;i<data.length;i++){ const v=data[i]<0?-data[i]:data[i]; if(v>max)max=v; }
+  if(max===0) return [];
+  const gap=Math.floor(sr*0.30); // refractory gap → guards against >200 BPM double-counting
+  let thr=max*0.9, peaks=[];
+  while(peaks.length<30 && thr>max*0.3){
+    peaks=[]; let i=0;
+    while(i<data.length){ const v=data[i]<0?-data[i]:data[i]; if(v>=thr){ peaks.push(i); i+=gap; } else { i++; } }
+    thr-=max*0.05;
+  }
+  return peaks;
+}
+function bpmFromPeaks(peaks, sr){
+  if(peaks.length<4) return null;
+  const counts={};
+  for(let i=0;i<peaks.length;i++){
+    for(let j=1;j<=10 && i+j<peaks.length;j++){
+      let bpm=60/((peaks[i+j]-peaks[i])/sr);
+      while(bpm<70) bpm*=2; while(bpm>180) bpm/=2;
+      bpm=Math.round(bpm);
+      if(bpm>=70 && bpm<=180) counts[bpm]=(counts[bpm]||0)+1;
+    }
+  }
+  let best=null, bestC=0;
+  for(const b in counts){ if(counts[b]>bestC){ bestC=counts[b]; best=+b; } }
+  return bestC>=3 ? best : null;   // require consensus, else honest "could not detect"
 }
 function trackPlay(){ if(!trackLoaded)return; const a=$("iaAudio"); if(a){ a.play().then(()=>{ if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="playing"; }).catch(()=>{}); } }
 function trackPauseTrack(){ const a=$("iaAudio"); if(a){ a.pause(); if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="paused"; } }
