@@ -1293,7 +1293,8 @@ function ac(){ if(!actx) actx=new (window.AudioContext||window.webkitAudioContex
 let clickTimer=null, nextBeat=0, beatNum=0;
 function startClick(bpm){
   stopClick();
-  const ctx=ac(); const interval=60/(bpm||72);
+  const ctx=ac(); if(ctx.state==="suspended" && ctx.resume) ctx.resume();   // ensure the click bus is running before scheduling
+  const interval=60/(bpm||72);
   nextBeat=ctx.currentTime+0.06; beatNum=0;
   const tick=()=>{
     while(nextBeat < ctx.currentTime+0.15){
@@ -1309,7 +1310,7 @@ function scheduleClick(t,accent){
   o.frequency.value=accent?1600:1000; g.gain.value=0.0001;
   o.connect(g); g.connect(ctx.destination);   // <-- EARS bus only (never house)
   g.gain.setValueAtTime(0.0001,t);
-  g.gain.exponentialRampToValueAtTime(accent?0.5:0.28,t+0.001);
+  g.gain.exponentialRampToValueAtTime(accent?0.9:0.6,t+0.001);   // louder so the click cuts through the loaded song (still a brief click, no drone)
   g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
   o.start(t); o.stop(t+0.06);
 }
