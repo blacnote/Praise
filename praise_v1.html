@@ -955,8 +955,6 @@
             <button class="btn metersel" id="meter4" onclick="setMeter(4)">4/4</button>
             <button class="btn" id="meter3" onclick="setMeter(3)">3/4</button>
             <span class="concept-tag">Auto meter detection coming later</span>
-            <div style="flex:1"></div>
-            <button class="btn cyan" onclick="testClick()">🔊 Test Click</button>
           </div>
           <div class="earcue" id="iaMeasure"><span class="barlab">Bar —</span></div>
           <div class="small earnote">After <b>Analyze Tempo</b>, the click automatically uses the detected BPM;
@@ -1348,26 +1346,33 @@ function unlockAudio(){
   if(ctx.state==="suspended" && ctx.resume) ctx.resume();   // resume on the user gesture
   getClickBus();                                            // ensure the persistent output node exists & is connected
 }
+/* pre-rendered click ticks — amplitude is baked into the PCM samples, so playback does NOT depend on
+   gain-automation timing relative to context resume (the prior oscillator+ramp silently failed in-browser). */
+let clickBuffers={};
+function clickBuf(accent){
+  const ctx=ac(); const key=accent?'a':'n';
+  if(clickBuffers[key]) return clickBuffers[key];
+  const sr=ctx.sampleRate, len=Math.floor(sr*0.06);         // 60ms tick
+  const buf=ctx.createBuffer(1,len,sr), data=buf.getChannelData(0);
+  const freq=accent?1500:1000, peak=accent?0.9:0.7;
+  for(let i=0;i<len;i++){
+    const tt=i/sr, env=Math.exp(-tt*45);                    // fast baked-in decay envelope
+    data[i]=Math.sin(2*Math.PI*freq*tt)*env*peak;
+  }
+  clickBuffers[key]=buf; return buf;
+}
 function playClickTone(t, accent){
-  const ctx=ac(); const o=ctx.createOscillator(), g=ctx.createGain();
-  o.frequency.value = accent?1500:1000;                     // clear, audible click tones
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.linearRampToValueAtTime(accent?0.85:0.6, t+0.002); // fast linear attack (robust — avoids exp-from-tiny silence)
-  g.gain.exponentialRampToValueAtTime(0.0001, t+0.09);      // ~90ms decay → clearly audible, still a brief click (no drone)
-  o.connect(g); g.connect(getClickBus());                   // dedicated click master gain → ctx.destination
-  o.start(t); o.stop(t+0.10);
+  const src=ac().createBufferSource();
+  src.buffer=clickBuf(accent);
+  src.connect(getClickBus());                               // → ctx.destination via persistent click master gain
+  src.start(t);                                             // baked envelope: audible even if scheduled at/just-before currentTime
 }
 function scheduleClick(t,accent,bar,beatInBar,gen){
   const ctx=ac();
   // visual measure count — fire roughly at the beat's audible moment (does not claim exact downbeat alignment)
   const delayMs=Math.max(0,(t-ctx.currentTime)*1000);
   setTimeout(()=>{ if(playing && gen===clickGen) renderMeasure(bar,beatInBar); }, delayMs);
-  playClickTone(t, accent);                                 // same audio path the Test Click uses
-}
-function testClick(){
-  unlockAudio();                                            // gesture-driven unlock of the browser audio context
-  const ctx=ac();
-  playClickTone(ctx.currentTime+0.05, true);                // one audible click to verify output — no track, no transport
+  playClickTone(t, accent);
 }
 function stopClick(){ if(clickTimer){clearTimeout(clickTimer);clickTimer=null;} }
 
@@ -1730,7 +1735,7 @@ function paintMeasure(html){            // mirror the same state to both meters 
 function renderMeasure(bar, beatInBar){
   let cells="";
   for(let b=0;b<meter;b++){
-    const label = (b===0) ? String(bar) : String(b+1);   // DLG style: the downbeat shows the bar number (1 / 2,2,3,4 / 3,2,3,4)
+    const label = String(b+1);   // beat cells always 1..meter; the bar number shows only in the "Bar N" label
     cells += '<span class="beatcell'+(b===beatInBar?' on':'')+'">'+label+'</span>';
   }
   paintMeasure('<span class="barlab">Bar '+bar+'</span>'+cells);
