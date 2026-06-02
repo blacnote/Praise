@@ -520,6 +520,15 @@
     border:1px dashed var(--mut);border-radius:999px;padding:2px 6px;margin-left:5px;
   }
   #iaTrackFile{font-size:12px;color:var(--ink-dim)}
+  #manualBpmInput{padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(8,12,22,0.6);color:var(--ink);font-family:inherit}
+  .barlab{color:var(--ink-dim);font-weight:700;margin-right:12px;letter-spacing:0.4px}
+  .beatcell{
+    display:inline-block;min-width:28px;text-align:center;padding:5px 0;margin:0 3px;border-radius:8px;
+    border:1px solid var(--line);font-weight:700;font-size:13px;color:var(--ink-dim);
+    font-variant-numeric:tabular-nums;transition:all .08s ease;
+  }
+  .beatcell.on{border-color:transparent;color:#031820;background:var(--cyan);box-shadow:0 0 14px -2px var(--gold-glow)}
+  .btn.metersel{border-color:var(--cyan);color:var(--cyan)}
 
   /* ============== ROUTING ============== */
   .route{
@@ -932,13 +941,21 @@
             <span class="small">Tempo: <b id="iaBpm" style="color:var(--cyan)">Not analyzed</b></span>
           </div>
           <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap">
-            <label style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink-dim)">
-              <input type="checkbox" id="optUseDetected" onchange="onClickSrcChange()" disabled style="width:auto;margin-right:4px"> Use detected BPM for click
-            </label>
+            <label style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink-dim)">Manual BPM
+              <input type="number" id="manualBpmInput" min="40" max="220" placeholder="—" oninput="onManualBpm()" style="width:74px;margin-left:6px"></label>
+            <button class="btn" onclick="clearManualBpm()">Clear override</button>
             <span class="small">Click using: <b id="iaClickSrc" style="color:var(--cyan)">Planned —</b></span>
           </div>
-          <div class="small earnote">Detected BPM is an estimate. This matches the click <b>tempo</b> only —
-            beat-grid / downbeat alignment, warp sync, and section locking come later.</div>
+          <div class="row" style="margin-top:12px;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="small" style="color:var(--ink-dim)">Meter:</span>
+            <button class="btn metersel" id="meter4" onclick="setMeter(4)">4/4</button>
+            <button class="btn" id="meter3" onclick="setMeter(3)">3/4</button>
+            <span class="concept-tag">Auto meter detection coming later</span>
+          </div>
+          <div class="earcue" id="iaMeasure"><span class="barlab">Bar —</span></div>
+          <div class="small earnote">After <b>Analyze Tempo</b>, the click automatically uses the detected BPM;
+            type a Manual BPM to override (priority: Manual → Detected → Planned). The measure count follows the
+            click beats — it is an estimate, <b>not</b> yet aligned to the song's exact downbeat. Browser-side only.</div>
           <audio id="iaAudio" preload="none"></audio>
         </div>
 
@@ -1296,23 +1313,28 @@ function closeEditor(){$("editorPanel").style.display="none";}
 /* ===================== AUDIO ENGINE ===================== */
 let actx=null;
 function ac(){ if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)(); return actx; }
-let clickTimer=null, nextBeat=0, beatNum=0;
+let clickTimer=null, nextBeat=0, beatNum=0, meter=4, clickGen=0;
 function startClick(bpm){
   stopClick();
   const ctx=ac(); if(ctx.state==="suspended" && ctx.resume) ctx.resume();   // ensure the click bus is running before scheduling
   const interval=60/(bpm||72);
   nextBeat=ctx.currentTime+0.06; beatNum=0;
+  const gen=++clickGen;                          // generation token → stale measure-visual callbacks won't render
   const tick=()=>{
     while(nextBeat < ctx.currentTime+0.15){
-      if($("optClick").checked && playing) scheduleClick(nextBeat, beatNum%4===0);
+      const beatInBar=beatNum%meter, accent=(beatInBar===0), bar=Math.floor(beatNum/meter)+1;
+      if($("optClick").checked && playing) scheduleClick(nextBeat, accent, bar, beatInBar, gen);
       nextBeat+=interval; beatNum++;
     }
     clickTimer=setTimeout(tick,40);
   };
   tick();
 }
-function scheduleClick(t,accent){
+function scheduleClick(t,accent,bar,beatInBar,gen){
   const ctx=ac(); const o=ctx.createOscillator(), g=ctx.createGain();
+  // visual measure count — fire roughly at the beat's audible moment (does not claim exact downbeat alignment)
+  const delayMs=Math.max(0,(t-ctx.currentTime)*1000);
+  setTimeout(()=>{ if(playing && gen===clickGen) renderMeasure(bar,beatInBar); }, delayMs);
   o.frequency.value=accent?1600:1000; g.gain.value=0.0001;
   o.connect(g); g.connect(ctx.destination);   // <-- EARS bus only (never house)
   g.gain.setValueAtTime(0.0001,t);
@@ -1377,7 +1399,7 @@ function stopAll(){
   $("ledEar").classList.remove("ear"); $("ledHouse").classList.remove("on");
   $("ppLed").classList.remove("on"); $("ppStatus").textContent="Placeholder (not linked in v1)";
   $("nowbar").classList.remove("flowon"); $("flowBadge").innerHTML="";
-  updateFlowButtons(); updateMoment(); updateEars();
+  updateFlowButtons(); updateMoment(); updateEars(); resetMeasure();
   renderLive(); $("nowCue").textContent="Press Start";
 }
 
@@ -1551,7 +1573,7 @@ const ROLE_DEFAULTS={
 };
 let curRole="leader";
 let earMix={};
-let trackLoaded=false, trackName="", trackFile=null, detectedBpm=null;
+let trackLoaded=false, trackName="", trackFile=null, detectedBpm=null, manualBpm=null;
 
 function defaultMixFor(roleId){
   const d=ROLE_DEFAULTS[roleId]||ROLE_DEFAULTS.leader; const m={};
@@ -1615,8 +1637,8 @@ function loadTrack(e){
   if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="loaded";
   if($("iaBpm")) $("iaBpm").textContent="Not analyzed";
   if($("iaAnalyzeBtn")) $("iaAnalyzeBtn").disabled=false;
-  const useChk=$("optUseDetected"); if(useChk){ useChk.checked=false; useChk.disabled=true; }  // new file: back to planned until re-analyzed
-  updateClickSrc();
+  manualBpm=null; const mi=$("manualBpmInput"); if(mi) mi.value="";   // new file: clear overrides → back to planned until analyzed
+  applyTempoChange();
   updateEars();
 }
 
@@ -1637,26 +1659,57 @@ function analyzeTempo(){
     .catch(()=>{ if(out) out.textContent="Could not detect reliably"; })
     .then(()=>{
       if(btn) btn.disabled = !trackLoaded;
-      const useChk=$("optUseDetected"); if(useChk) useChk.disabled = !detectedBpm;  // can only choose detected once it exists
-      updateClickSrc();
+      applyTempoChange();                              // detected BPM auto-applies to the click — no opt-in needed
     });
 }
 
-/* ===== Click source: planned vs detected BPM (estimate-only; not beat-grid sync) ===== */
+/* ===== Click tempo source — priority: Manual > Detected > Planned (estimate-only; not beat-grid sync) ===== */
 function clickBpm(){
-  const useDet = $("optUseDetected") && $("optUseDetected").checked && detectedBpm;
-  if(useDet) return detectedBpm;                       // user opted into detected, and it exists
-  return curSongObj() ? curSongObj().bpm : 72;         // default / fallback: planned BPM
+  if(manualBpm) return manualBpm;                      // 1) explicit manual override
+  if(detectedBpm) return detectedBpm;                  // 2) analyzed track tempo (auto-applied)
+  return curSongObj() ? curSongObj().bpm : 72;         // 3) default: planned song BPM
 }
-function updateClickSrc(){
-  const el=$("iaClickSrc"); if(!el) return;
-  const useDet = $("optUseDetected") && $("optUseDetected").checked && detectedBpm;
-  el.textContent = useDet ? ("Detected "+detectedBpm+" BPM")
-                          : ("Planned "+(curSongObj()?curSongObj().bpm:72)+" BPM");
+function clickSrcLabel(){
+  if(manualBpm) return "Manual "+manualBpm+" BPM";
+  if(detectedBpm) return "Detected "+detectedBpm+" BPM";
+  return "Planned "+(curSongObj()?curSongObj().bpm:72)+" BPM";
 }
-function onClickSrcChange(){
+function updateClickSrc(){ const el=$("iaClickSrc"); if(el) el.textContent=clickSrcLabel(); }
+function applyTempoChange(){
   updateClickSrc();
-  if(playing) startClick(clickBpm());                  // restart click at the new BPM — song & guide untouched
+  if(playing) startClick(clickBpm());                  // restart click only at the new BPM — song & guide untouched
+}
+function onManualBpm(){
+  const v=parseInt(($("manualBpmInput")||{}).value,10);
+  manualBpm = (v>=40 && v<=220) ? v : null;            // safe range; out-of-range/empty clears the override
+  applyTempoChange();
+}
+function clearManualBpm(){ manualBpm=null; const i=$("manualBpmInput"); if(i) i.value=""; applyTempoChange(); }
+
+/* ===== Meter (4/4 default · 3/4 option) — manual selection; honest, no auto-detection ===== */
+function setMeter(m){
+  meter = (m===3?3:4);
+  const b4=$("meter4"), b3=$("meter3");
+  if(b4) b4.classList.toggle("metersel", meter===4);
+  if(b3) b3.classList.toggle("metersel", meter===3);
+  if(playing) startClick(clickBpm());                  // restart click so accents/bars regroup at the new meter
+  else resetMeasure();
+}
+/* ===== Measure / bar count — follows the click's beats (foundation; not exact downbeat alignment) ===== */
+function renderMeasure(bar, beatInBar){
+  const box=$("iaMeasure"); if(!box) return;
+  let cells="";
+  for(let b=0;b<meter;b++){
+    const label = (b===0) ? String(bar) : String(b+1);   // DLG style: the downbeat shows the bar number (1 / 2,2,3,4 / 3,2,3,4)
+    cells += '<span class="beatcell'+(b===beatInBar?' on':'')+'">'+label+'</span>';
+  }
+  box.innerHTML = '<span class="barlab">Bar '+bar+'</span>'+cells;
+}
+function resetMeasure(){
+  const box=$("iaMeasure"); if(!box) return;
+  let cells="";
+  for(let b=0;b<meter;b++){ cells += '<span class="beatcell">'+(b+1)+'</span>'; }
+  box.innerHTML = '<span class="barlab">Bar —</span>'+cells;
 }
 function detectBpm(audioBuffer){
   const OAC = window.OfflineAudioContext||window.webkitOfflineAudioContext;
@@ -1749,7 +1802,7 @@ function updateLiveUI(){
 }
 
 /* ===================== INIT ===================== */
-renderSet(); renderLive(); loadMix(); renderEars(); updateClickSrc();
+renderSet(); renderLive(); loadMix(); renderEars(); updateClickSrc(); resetMeasure();
 </script>
 </body>
 </html>
