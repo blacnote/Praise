@@ -823,6 +823,10 @@
           <input type="checkbox" id="optClick" checked onchange="updateEars()" style="width:auto;margin-right:4px"> Click
         </label>
       </div>
+      <div class="row" style="margin-top:14px;gap:10px;align-items:center">
+        <span class="small" style="color:var(--ink-dim)">Count</span>
+        <div class="earcue" id="liveMeasure" style="margin:0;flex:1"><span class="barlab">Bar —</span></div>
+      </div>
     </div>
 
     <!-- IN-EAR QUICK STATUS — full control lives on the In-Ears page -->
@@ -951,6 +955,8 @@
             <button class="btn metersel" id="meter4" onclick="setMeter(4)">4/4</button>
             <button class="btn" id="meter3" onclick="setMeter(3)">3/4</button>
             <span class="concept-tag">Auto meter detection coming later</span>
+            <div style="flex:1"></div>
+            <button class="btn cyan" onclick="testClick()">🔊 Test Click</button>
           </div>
           <div class="earcue" id="iaMeasure"><span class="barlab">Bar —</span></div>
           <div class="small earnote">After <b>Analyze Tempo</b>, the click automatically uses the detected BPM;
@@ -1316,7 +1322,7 @@ function ac(){ if(!actx) actx=new (window.AudioContext||window.webkitAudioContex
 let clickTimer=null, nextBeat=0, beatNum=0, meter=4, clickGen=0;
 function startClick(bpm){
   stopClick();
-  const ctx=ac(); if(ctx.state==="suspended" && ctx.resume) ctx.resume();   // ensure the click bus is running before scheduling
+  const ctx=ac(); unlockAudio();   // resume + ensure the persistent click output graph is live before scheduling
   const interval=60/(bpm||72);
   nextBeat=ctx.currentTime+0.06; beatNum=0;
   const gen=++clickGen;                          // generation token → stale measure-visual callbacks won't render
@@ -1330,17 +1336,38 @@ function startClick(bpm){
   };
   tick();
 }
-function scheduleClick(t,accent,bar,beatInBar,gen){
+/* persistent click output graph — created once, kept connected to ctx.destination */
+let clickBus=null;
+function getClickBus(){
+  const ctx=ac();
+  if(!clickBus){ clickBus=ctx.createGain(); clickBus.gain.value=1.0; clickBus.connect(ctx.destination); }
+  return clickBus;
+}
+function unlockAudio(){
+  const ctx=ac();
+  if(ctx.state==="suspended" && ctx.resume) ctx.resume();   // resume on the user gesture
+  getClickBus();                                            // ensure the persistent output node exists & is connected
+}
+function playClickTone(t, accent){
   const ctx=ac(); const o=ctx.createOscillator(), g=ctx.createGain();
+  o.frequency.value = accent?1500:1000;                     // clear, audible click tones
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(accent?0.85:0.6, t+0.002); // fast linear attack (robust — avoids exp-from-tiny silence)
+  g.gain.exponentialRampToValueAtTime(0.0001, t+0.09);      // ~90ms decay → clearly audible, still a brief click (no drone)
+  o.connect(g); g.connect(getClickBus());                   // dedicated click master gain → ctx.destination
+  o.start(t); o.stop(t+0.10);
+}
+function scheduleClick(t,accent,bar,beatInBar,gen){
+  const ctx=ac();
   // visual measure count — fire roughly at the beat's audible moment (does not claim exact downbeat alignment)
   const delayMs=Math.max(0,(t-ctx.currentTime)*1000);
   setTimeout(()=>{ if(playing && gen===clickGen) renderMeasure(bar,beatInBar); }, delayMs);
-  o.frequency.value=accent?1600:1000; g.gain.value=0.0001;
-  o.connect(g); g.connect(ctx.destination);   // <-- EARS bus only (never house)
-  g.gain.setValueAtTime(0.0001,t);
-  g.gain.exponentialRampToValueAtTime(accent?0.9:0.6,t+0.001);   // louder so the click cuts through the loaded song (still a brief click, no drone)
-  g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
-  o.start(t); o.stop(t+0.06);
+  playClickTone(t, accent);                                 // same audio path the Test Click uses
+}
+function testClick(){
+  unlockAudio();                                            // gesture-driven unlock of the browser audio context
+  const ctx=ac();
+  playClickTone(ctx.currentTime+0.05, true);                // one audible click to verify output — no track, no transport
 }
 function stopClick(){ if(clickTimer){clearTimeout(clickTimer);clickTimer=null;} }
 
@@ -1376,7 +1403,7 @@ function curSecObj(){return curSongObj()?curSongObj().sections[curSec]:null;}
 function togglePlay(){ if(playing){ pausePlay(); } else { startPlay(); } }
 function startPlay(){
   if(!songs.length){alert("Add a song first.");return;}
-  ac().resume&&ac().resume();
+  unlockAudio();   // resume + build the persistent click output graph in the Start gesture
   playing=true; $("btnPlay").textContent="⏸ Pause";
   $("ledEar").classList.add("ear"); $("ledHouse").classList.add("on");
   $("ppLed").classList.add("on"); $("ppStatus").textContent="Following live flow (simulated)";
@@ -1696,20 +1723,22 @@ function setMeter(m){
   else resetMeasure();
 }
 /* ===== Measure / bar count — follows the click's beats (foundation; not exact downbeat alignment) ===== */
+function paintMeasure(html){            // mirror the same state to both meters → no separate/drifting scheduler
+  const a=$("iaMeasure"), b=$("liveMeasure");
+  if(a) a.innerHTML=html; if(b) b.innerHTML=html;
+}
 function renderMeasure(bar, beatInBar){
-  const box=$("iaMeasure"); if(!box) return;
   let cells="";
   for(let b=0;b<meter;b++){
     const label = (b===0) ? String(bar) : String(b+1);   // DLG style: the downbeat shows the bar number (1 / 2,2,3,4 / 3,2,3,4)
     cells += '<span class="beatcell'+(b===beatInBar?' on':'')+'">'+label+'</span>';
   }
-  box.innerHTML = '<span class="barlab">Bar '+bar+'</span>'+cells;
+  paintMeasure('<span class="barlab">Bar '+bar+'</span>'+cells);
 }
 function resetMeasure(){
-  const box=$("iaMeasure"); if(!box) return;
   let cells="";
   for(let b=0;b<meter;b++){ cells += '<span class="beatcell">'+(b+1)+'</span>'; }
-  box.innerHTML = '<span class="barlab">Bar —</span>'+cells;
+  paintMeasure('<span class="barlab">Bar —</span>'+cells);
 }
 function detectBpm(audioBuffer){
   const OAC = window.OfflineAudioContext||window.webkitOfflineAudioContext;
