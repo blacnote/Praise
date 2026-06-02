@@ -931,8 +931,14 @@
             <button class="btn" id="iaAnalyzeBtn" onclick="analyzeTempo()" disabled>Analyze Tempo</button>
             <span class="small">Tempo: <b id="iaBpm" style="color:var(--cyan)">Not analyzed</b></span>
           </div>
-          <div class="small earnote">Tempo detection is an estimate (browser-side analysis of your local file).
-            The click does not follow the detected tempo yet — this phase only detects and displays BPM.</div>
+          <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap">
+            <label style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink-dim)">
+              <input type="checkbox" id="optUseDetected" onchange="onClickSrcChange()" disabled style="width:auto;margin-right:4px"> Use detected BPM for click
+            </label>
+            <span class="small">Click using: <b id="iaClickSrc" style="color:var(--cyan)">Planned —</b></span>
+          </div>
+          <div class="small earnote">Detected BPM is an estimate. This matches the click <b>tempo</b> only —
+            beat-grid / downbeat alignment, warp sync, and section locking come later.</div>
           <audio id="iaAudio" preload="none"></audio>
         </div>
 
@@ -1354,7 +1360,7 @@ function startPlay(){
   $("ppLed").classList.add("on"); $("ppStatus").textContent="Following live flow (simulated)";
   // pad/drone is no longer auto-started — it was filler before real track playback; kept available for future intentional use
   // count-in: 4 beats
-  counting=true; countLeft=4; startClick(curSongObj().bpm);
+  counting=true; countLeft=4; startClick(clickBpm());
   $("nowCue").textContent="Count-in… 4";
   lastTick=performance.now(); loop();
   speak("Count in"); updateEars();
@@ -1421,7 +1427,7 @@ function advanceSection(){
   if(curSec < curSongObj().sections.length-1){ curSec++; cueSection(false); }
   else { // next song
     if(curSong < songs.length-1){ curSong++; curSec=0;
-      startClick(curSongObj().bpm); cueSection(false); }
+      startClick(clickBpm()); cueSection(false); }
     else { $("nowCue").textContent="✓ Set complete"; pausePlay(); }
   }
   updateLiveUI();
@@ -1429,7 +1435,7 @@ function advanceSection(){
 
 /* jump */
 function jumpToSong(i){ curSong=i; curSec=0; secElapsed=0;
-  if(playing){ startClick(curSongObj().bpm); cueSection(false); }
+  if(playing){ startClick(clickBpm()); cueSection(false); }
   updateLiveUI(); renderLive(); }
 function jumpToSection(i){ curSec=i; secElapsed=0;
   if(playing) cueSection(false); updateLiveUI(); renderLive(); }
@@ -1609,6 +1615,8 @@ function loadTrack(e){
   if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="loaded";
   if($("iaBpm")) $("iaBpm").textContent="Not analyzed";
   if($("iaAnalyzeBtn")) $("iaAnalyzeBtn").disabled=false;
+  const useChk=$("optUseDetected"); if(useChk){ useChk.checked=false; useChk.disabled=true; }  // new file: back to planned until re-analyzed
+  updateClickSrc();
   updateEars();
 }
 
@@ -1627,7 +1635,28 @@ function analyzeTempo(){
       if(out) out.textContent = bpm ? ("Detected: "+bpm+" BPM (estimate)") : "Could not detect reliably";
     })
     .catch(()=>{ if(out) out.textContent="Could not detect reliably"; })
-    .then(()=>{ if(btn) btn.disabled = !trackLoaded; });
+    .then(()=>{
+      if(btn) btn.disabled = !trackLoaded;
+      const useChk=$("optUseDetected"); if(useChk) useChk.disabled = !detectedBpm;  // can only choose detected once it exists
+      updateClickSrc();
+    });
+}
+
+/* ===== Click source: planned vs detected BPM (estimate-only; not beat-grid sync) ===== */
+function clickBpm(){
+  const useDet = $("optUseDetected") && $("optUseDetected").checked && detectedBpm;
+  if(useDet) return detectedBpm;                       // user opted into detected, and it exists
+  return curSongObj() ? curSongObj().bpm : 72;         // default / fallback: planned BPM
+}
+function updateClickSrc(){
+  const el=$("iaClickSrc"); if(!el) return;
+  const useDet = $("optUseDetected") && $("optUseDetected").checked && detectedBpm;
+  el.textContent = useDet ? ("Detected "+detectedBpm+" BPM")
+                          : ("Planned "+(curSongObj()?curSongObj().bpm:72)+" BPM");
+}
+function onClickSrcChange(){
+  updateClickSrc();
+  if(playing) startClick(clickBpm());                  // restart click at the new BPM — song & guide untouched
 }
 function detectBpm(audioBuffer){
   const OAC = window.OfflineAudioContext||window.webkitOfflineAudioContext;
@@ -1720,7 +1749,7 @@ function updateLiveUI(){
 }
 
 /* ===================== INIT ===================== */
-renderSet(); renderLive(); loadMix(); renderEars();
+renderSet(); renderLive(); loadMix(); renderEars(); updateClickSrc();
 </script>
 </body>
 </html>
