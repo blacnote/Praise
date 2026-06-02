@@ -1344,7 +1344,7 @@ function startPlay(){
   playing=true; $("btnPlay").textContent="⏸ Pause";
   $("ledEar").classList.add("ear"); $("ledHouse").classList.add("on");
   $("ppLed").classList.add("on"); $("ppStatus").textContent="Following live flow (simulated)";
-  startPad(curSongObj().key);
+  // pad/drone is no longer auto-started — it was filler before real track playback; kept available for future intentional use
   // count-in: 4 beats
   counting=true; countLeft=4; startClick(curSongObj().bpm);
   $("nowCue").textContent="Count-in… 4";
@@ -1412,7 +1412,7 @@ function advanceSection(){
   secElapsed=0;
   if(curSec < curSongObj().sections.length-1){ curSec++; cueSection(false); }
   else { // next song
-    if(curSong < songs.length-1){ curSong++; curSec=0; startPad(curSongObj().key);
+    if(curSong < songs.length-1){ curSong++; curSec=0;
       startClick(curSongObj().bpm); cueSection(false); }
     else { $("nowCue").textContent="✓ Set complete"; pausePlay(); }
   }
@@ -1421,7 +1421,7 @@ function advanceSection(){
 
 /* jump */
 function jumpToSong(i){ curSong=i; curSec=0; secElapsed=0;
-  if(playing){ startPad(curSongObj().key); startClick(curSongObj().bpm); cueSection(false); }
+  if(playing){ startClick(curSongObj().bpm); cueSection(false); }
   updateLiveUI(); renderLive(); }
 function jumpToSection(i){ curSec=i; secElapsed=0;
   if(playing) cueSection(false); updateLiveUI(); renderLive(); }
