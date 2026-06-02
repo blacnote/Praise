@@ -1334,45 +1334,53 @@ function startClick(bpm){
   };
   tick();
 }
-/* persistent click output graph — created once, kept connected to ctx.destination */
-let clickBus=null;
-function getClickBus(){
-  const ctx=ac();
-  if(!clickBus){ clickBus=ctx.createGain(); clickBus.gain.value=1.0; clickBus.connect(ctx.destination); }
-  return clickBus;
-}
 function unlockAudio(){
   const ctx=ac();
-  if(ctx.state==="suspended" && ctx.resume) ctx.resume();   // resume on the user gesture
-  getClickBus();                                            // ensure the persistent output node exists & is connected
+  if(ctx.state==="suspended" && ctx.resume) ctx.resume();   // resume the timing clock on the user gesture
 }
-/* pre-rendered click ticks — amplitude is baked into the PCM samples, so playback does NOT depend on
-   gain-automation timing relative to context resume (the prior oscillator+ramp silently failed in-browser). */
-let clickBuffers={};
-function clickBuf(accent){
-  const ctx=ac(); const key=accent?'a':'n';
-  if(clickBuffers[key]) return clickBuffers[key];
-  const sr=ctx.sampleRate, len=Math.floor(sr*0.06);         // 60ms tick
-  const buf=ctx.createBuffer(1,len,sr), data=buf.getChannelData(0);
-  const freq=accent?1500:1000, peak=accent?0.9:0.7;
-  for(let i=0;i<len;i++){
-    const tt=i/sr, env=Math.exp(-tt*45);                    // fast baked-in decay envelope
-    data[i]=Math.sin(2*Math.PI*freq*tt)*env*peak;
+/* Click tick = a generated WAV data URI played through a plain HTMLAudioElement — the SAME proven-audible
+   browser path as the music. (Web Audio advanced its clock but produced no audible output in-browser.) */
+function makeTickWav(freq, peak, ms){
+  const sr=44100, n=Math.floor(sr*ms/1000), dataLen=n*2;
+  const buf=new ArrayBuffer(44+dataLen), dv=new DataView(buf); let p=0;
+  const ws=s=>{ for(let i=0;i<s.length;i++) dv.setUint8(p++, s.charCodeAt(i)); };
+  const u32=v=>{ dv.setUint32(p,v,true); p+=4; };
+  const u16=v=>{ dv.setUint16(p,v,true); p+=2; };
+  ws("RIFF"); u32(36+dataLen); ws("WAVE"); ws("fmt "); u32(16); u16(1); u16(1);
+  u32(sr); u32(sr*2); u16(2); u16(16); ws("data"); u32(dataLen);
+  for(let i=0;i<n;i++){
+    const tt=i/sr, env=Math.exp(-tt*45);                    // baked decay envelope
+    let s=Math.sin(2*Math.PI*freq*tt)*env*peak; s=s<-1?-1:s>1?1:s;
+    dv.setInt16(p, (s*32767)|0, true); p+=2;
   }
-  clickBuffers[key]=buf; return buf;
+  let bin=""; const by=new Uint8Array(buf);
+  for(let i=0;i<by.length;i++) bin+=String.fromCharCode(by[i]);
+  return "data:audio/wav;base64,"+btoa(bin);
 }
-function playClickTone(t, accent){
-  const src=ac().createBufferSource();
-  src.buffer=clickBuf(accent);
-  src.connect(getClickBus());                               // → ctx.destination via persistent click master gain
-  src.start(t);                                             // baked envelope: audible even if scheduled at/just-before currentTime
+let clickEls=null;
+function clickEl(accent){
+  if(!clickEls){
+    const a=new Audio(makeTickWav(1500,0.9,60)); a.preload="auto";   // accent (downbeat)
+    const n=new Audio(makeTickWav(1000,0.7,60)); n.preload="auto";   // normal beat
+    clickEls={a:a, n:n};
+  }
+  return accent?clickEls.a:clickEls.n;
+}
+function playClickTick(accent){
+  const el=clickEl(accent);
+  try{ el.currentTime=0; }catch(e){}
+  const pr=el.play(); if(pr&&pr.catch) pr.catch(()=>{});   // same play() path the music uses
 }
 function scheduleClick(t,accent,bar,beatInBar,gen){
   const ctx=ac();
-  // visual measure count — fire roughly at the beat's audible moment (does not claim exact downbeat alignment)
+  // fire the audible click + visual beat together at the beat's moment → click stays in time with the bar meter
   const delayMs=Math.max(0,(t-ctx.currentTime)*1000);
-  setTimeout(()=>{ if(playing && gen===clickGen) renderMeasure(bar,beatInBar); }, delayMs);
-  playClickTone(t, accent);
+  setTimeout(()=>{
+    if(playing && gen===clickGen){
+      renderMeasure(bar,beatInBar);
+      if($("optClick").checked) playClickTick(accent);   // existing Click checkbox is the control
+    }
+  }, delayMs);
 }
 function stopClick(){ if(clickTimer){clearTimeout(clickTimer);clickTimer=null;} }
 
