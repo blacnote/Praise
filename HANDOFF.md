@@ -142,6 +142,27 @@ separate control/rehearsal layer; the StudioLive 64s stays the live/house author
 
 ---
 
+## I. Uploaded Song Visibility + Track Control — built (2026-06-08)
+
+The loaded local song now has a real control surface in **In-Ears → Track Test** (operates on the
+existing `iaAudio` element only — no new audio path, click untouched):
+- **Total duration** + **current elapsed time** — `#iaTrackTime` ("m:ss / m:ss"), updated from
+  `iaAudio` events (`loadedmetadata`, `durationchange`, `timeupdate`) via `formatTime()`.
+- **Progress / scrub / seek** — `#iaSeek` range; `onSeekInput()` sets `iaAudio.currentTime`. Seeking
+  keeps the track playing if playing and paused if paused. A `seeking` flag stops `timeupdate` from
+  fighting the handle while dragging.
+- **Restart** — `#iaRestartBtn` / `trackRestart()` → returns to 0 (replays if it was playing).
+- **Clear / remove** — `#iaClearBtn` / `clearTrack()` → stops the track, revokes the blob URL, clears
+  `trackLoaded` / `trackName` / `trackFile` / `detectedBpm`, resets the file input + all displays, and
+  disables Analyze Tempo until a new file is loaded. (Manual BPM override is left intact.)
+- Existing **filename** (`#iaTrackName`), **play-state** (`#iaTrackPlayState`), and **Play / Pause /
+  Stop** behavior are unchanged.
+
+**Not touched:** click path (HTMLAudio WAV tick), `optClick`, bar meters, BPM priority logic. Track
+playback remains browser-local — nothing is uploaded or committed.
+
+---
+
 ## Commit reference
 
 | Commit | Meaning |
@@ -149,3 +170,4 @@ separate control/rehearsal layer; the StudioLive 64s stays the live/house author
 | `6df7e27` | Click routed through the proven HTMLAudio WAV tick path — **confirmed audible** |
 | `5e1c0a9` | Protected checkpoint note (this handoff originated here) |
 | `056c1c4` | Expanded into full project handoff |
+| `6b7be5f` | Core Rehearsal pass + Studio 64s integration-readiness lane |

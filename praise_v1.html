@@ -941,6 +941,12 @@
               · <span id="iaTrackPlayState">idle</span></span>
           </div>
           <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap">
+            <span class="small" id="iaTrackTime" style="font-variant-numeric:tabular-nums;color:var(--ink-dim);min-width:92px">0:00 / 0:00</span>
+            <input type="range" id="iaSeek" min="0" max="0" value="0" step="0.1" disabled oninput="onSeekInput()" onchange="onSeekDone()" style="flex:1;min-width:150px;accent-color:var(--cyan)" aria-label="Track position">
+            <button class="btn" id="iaRestartBtn" onclick="trackRestart()" disabled>⏮ Restart</button>
+            <button class="btn" id="iaClearBtn" onclick="clearTrack()" disabled>🗑 Clear</button>
+          </div>
+          <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap">
             <button class="btn" id="iaAnalyzeBtn" onclick="analyzeTempo()" disabled>Analyze Tempo</button>
             <span class="small">Tempo: <b id="iaBpm" style="color:var(--cyan)">Not analyzed</b></span>
           </div>
@@ -1677,9 +1683,63 @@ function loadTrack(e){
   if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="loaded";
   if($("iaBpm")) $("iaBpm").textContent="Not analyzed";
   if($("iaAnalyzeBtn")) $("iaAnalyzeBtn").disabled=false;
+  if($("iaRestartBtn")) $("iaRestartBtn").disabled=false;
+  if($("iaClearBtn")) $("iaClearBtn").disabled=false;
+  const sk=$("iaSeek"); if(sk){ sk.disabled=false; sk.value=0; sk.max=0; }
+  if($("iaTrackTime")) $("iaTrackTime").textContent="0:00 / 0:00";   // real duration fills in on loadedmetadata
   manualBpm=null; const mi=$("manualBpmInput"); if(mi) mi.value="";   // new file: clear overrides → back to planned until analyzed
   applyTempoChange();
   updateEars();
+}
+
+/* ===== Uploaded-song visibility + track control (operates on the iaAudio element only) ===== */
+let seeking=false;
+function formatTime(s){ if(!isFinite(s)||s<0) s=0; s=Math.floor(s); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); }
+function updateTrackTime(){
+  const a=$("iaAudio"); if(!a) return;
+  const cur=a.currentTime||0, dur=isFinite(a.duration)?a.duration:0;
+  const t=$("iaTrackTime"); if(t) t.textContent=formatTime(cur)+" / "+formatTime(dur);
+  const sk=$("iaSeek"); if(sk && !seeking){ if(dur>0 && +sk.max!==dur) sk.max=dur; sk.value=cur; }
+}
+function onSeekInput(){
+  const a=$("iaAudio"), sk=$("iaSeek"); if(!a||!sk||!trackLoaded) return;
+  seeking=true;                                  // user is dragging → don't let timeupdate fight the handle
+  try{ a.currentTime=parseFloat(sk.value)||0; }catch(e){}   // seeking keeps play/pause state as-is
+  const dur=isFinite(a.duration)?a.duration:0, t=$("iaTrackTime");
+  if(t) t.textContent=formatTime(a.currentTime)+" / "+formatTime(dur);
+}
+function onSeekDone(){ seeking=false; }
+function trackRestart(){
+  const a=$("iaAudio"); if(!a||!trackLoaded) return;
+  const wasPlaying=!a.paused && !a.ended;
+  try{ a.currentTime=0; }catch(e){}
+  if(wasPlaying){ const p=a.play(); if(p&&p.catch) p.catch(()=>{}); }   // playing → restart from 0 playing; paused → stays paused at 0
+  updateTrackTime();
+}
+function clearTrack(){
+  const a=$("iaAudio");
+  if(a){ try{ a.pause(); }catch(e){}
+    if(a.src && a.src.indexOf("blob:")===0){ try{ URL.revokeObjectURL(a.src); }catch(e){} }
+    a.removeAttribute("src"); try{ a.load(); }catch(e){} }
+  trackLoaded=false; trackName=""; trackFile=null; detectedBpm=null;   // detectedBpm belonged to the removed track
+  const fi=$("iaTrackFile"); if(fi) fi.value="";
+  if($("iaTrackName")) $("iaTrackName").textContent="none";
+  if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="idle";
+  if($("iaBpm")) $("iaBpm").textContent="Not analyzed";
+  if($("iaTrackTime")) $("iaTrackTime").textContent="0:00 / 0:00";
+  const sk=$("iaSeek"); if(sk){ sk.value=0; sk.max=0; sk.disabled=true; }
+  if($("iaRestartBtn")) $("iaRestartBtn").disabled=true;
+  if($("iaClearBtn")) $("iaClearBtn").disabled=true;
+  if($("iaAnalyzeBtn")) $("iaAnalyzeBtn").disabled=true;   // analyze stays disabled until another file is loaded
+  applyTempoChange();   // click-source label back to Manual/Planned (detected cleared); manual override left intact
+  updateEars();
+}
+function bindTrackEvents(){
+  const a=$("iaAudio"); if(!a) return;
+  a.addEventListener("loadedmetadata", updateTrackTime);
+  a.addEventListener("durationchange", updateTrackTime);
+  a.addEventListener("timeupdate", updateTrackTime);
+  a.addEventListener("ended", ()=>{ if($("iaTrackPlayState")) $("iaTrackPlayState").textContent="ended"; updateTrackTime(); });
 }
 
 /* ===== Tempo/BPM detection — browser-side estimate only; does NOT change the click ===== */
@@ -1844,7 +1904,7 @@ function updateLiveUI(){
 }
 
 /* ===================== INIT ===================== */
-renderSet(); renderLive(); loadMix(); renderEars(); updateClickSrc(); resetMeasure();
+renderSet(); renderLive(); loadMix(); renderEars(); updateClickSrc(); resetMeasure(); bindTrackEvents();
 </script>
 </body>
 </html>
