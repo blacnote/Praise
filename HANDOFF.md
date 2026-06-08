@@ -221,15 +221,23 @@ sections → display lyrics in Live Run.
 
 ## N. Roles + Personal Mix roadmap (no fake stems)
 
-**Roles** (In-Ears `ROLES`) now include **Organist**: Worship Leader · Drummer · Bass · Keys ·
-**Organist** · Guitar · BGV · Tracks Operator. **Guidance** is the main word (the mix source formerly
-"Guide" is now **"Guidance"**; "Cues" is now **"Section prompts"** = Intro/Verse/Chorus/Bridge/Vamp/Outro).
+**Roles** (In-Ears `ROLES`): Worship Leader · Drummer · Bass · Keys · **Organist** · Guitar · BGV ·
+Tracks Operator. **Guidance** is the main word.
+
+**Set Builder entry — two honest paths (2026-06-08 alignment):**
+- **Primary:** *Load a song* (In-Ears → Load a Song) → Praise **auto-creates a playable set song** with
+  audio attached.
+- **Secondary:** **`+ Add Song Info`** (formerly "Add Song") creates a **planning / metadata-only** song
+  (title/key/BPM/lyrics/sections, **no audio**), labeled "Metadata only — no audio attached yet." Kept for
+  planning before audio exists; not removed (DLG to decide if it should ever go).
 
 **Personal Mix (In-Ears) — concept only, not built as real audio yet:**
-- **Immediate target:** each role controls **Music / Click / Guidance** levels.
-- **Future (after real stem breakdown):** Drums, Bass, Keyboards, Guitar, Pads, Click, Guide, Talkback,
-  Background Vocals, Lead. **No stems exist yet — do not claim stems are available until actually built.**
-- **Future:** an "Add custom instrument/category" control (e.g. strings/violin) for sources not listed.
+- **Immediate active sources (concept sliders):** **Music · Click · Guidance** (the only sliders shown).
+- **Future stem mix sources (shown in-app as PLANNED · not active):** Drums, Bass, Keyboards, Guitar,
+  Pads, Click, Guidance, Talkback, Background Vocals, Lead, Violin / Strings. **No stems exist yet — these
+  are not active sliders and do not route audio. Do not claim stems are available until actually built.**
+- **Future:** an **"Add instrument / category"** control (e.g. strings/violin) — currently shown as a
+  *planned* tag only, not a working button.
 
 ### Gate roadmap
 - **Gate 2 (next):** Live Run selected-song playback/control — play/seek a set song's attached audio from
@@ -250,3 +258,4 @@ sections → display lyrics in Live Run.
 | `e6dbcf7` | Uploaded-song visibility + track control (duration, seek, restart, clear) |
 | `c69ddb7` | Gate 1 — uploaded audio → Set Builder attachment status |
 | `32e3da9` | Realign — loaded song becomes a Set Builder song (via Add button) |
+| `ad16086` | Upload auto-creates set song; demo songs removed; Organist role |

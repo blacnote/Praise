@@ -751,8 +751,11 @@
           <span class="small">&nbsp;·&nbsp;<span id="setCount">0</span> songs in the set</span>
           <div class="microcopy">Built for Sunday morning trust</div>
         </div>
-        <button class="btn gold" onclick="openSongEditor()">+ Add Song</button>
+        <button class="btn" onclick="openSongEditor()" title="Add a planning/metadata song — no audio. Load a song to create a playable set song.">+ Add Song Info</button>
       </div>
+      <div class="small" style="margin-top:8px;color:var(--ink-dim)">Primary: <b>Load a song</b> (In-Ears → Load a Song)
+        and Praise auto-creates a playable set song. <b>+ Add Song Info</b> is for planning only — title/key/BPM/lyrics/sections
+        with <b>no audio attached yet</b>.</div>
       <hr>
       <div id="setList"></div>
     </div>
@@ -922,8 +925,20 @@
             <button class="btn" onclick="resetRole()">Reset role mix</button>
             <button class="btn" onclick="resetAllRoles()">Reset all roles</button>
           </div>
-          <div class="small earnote">Mix levels are a personal-control concept — each source's on/off + level
-            shapes what this role wants in their PRAISE in-ears. No per-source audio routing is active yet.</div>
+          <div class="small earnote"><b>Immediate sources (Music · Click · Guidance)</b> are a personal-control
+            concept — each source's on/off + level shapes what this role wants in their PRAISE in-ears.
+            No per-source audio routing is active yet.</div>
+          <div class="small earnote" style="margin-top:12px"><b>Future stem mix sources</b> — planned, available
+            after real stem separation. These are <b>not active</b> yet (no stem audio exists):</div>
+          <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">
+            <span class="concept-tag">Drums</span><span class="concept-tag">Bass</span>
+            <span class="concept-tag">Keyboards</span><span class="concept-tag">Guitar</span>
+            <span class="concept-tag">Pads</span><span class="concept-tag">Click</span>
+            <span class="concept-tag">Guidance</span><span class="concept-tag">Talkback</span>
+            <span class="concept-tag">Background Vocals</span><span class="concept-tag">Lead</span>
+            <span class="concept-tag">Violin / Strings</span>
+            <span class="concept-tag">+ Add instrument / category (planned)</span>
+          </div>
         </div>
 
         <!-- TRACK TEST -->
@@ -1291,7 +1306,7 @@ let editIndex=-1;
 function openSongEditor(i){
   editIndex = (i===undefined?-1:i);
   $("editorPanel").style.display="block";
-  $("edTitle").textContent = editIndex<0?"Add Song":"Edit Song";
+  $("edTitle").textContent = editIndex<0?"Add Song Info (planning · no audio)":"Edit Song";
   const so = editIndex<0?{title:"",artist:"",key:"",bpm:"",lyrics:"",sections:[{n:"Intro",s:16},{n:"Verse 1",s:30},{n:"Chorus",s:32}]}:songs[editIndex];
   $("edSongTitle").value=so.title; $("edArtist").value=so.artist; $("edKey").value=so.key;
   $("edBpm").value=so.bpm; $("edLyrics").value=so.lyrics||"";
@@ -1646,13 +1661,13 @@ const ROLES=[
   {id:"bgv",    icon:"🎵", name:"BGV"},
   {id:"tracks", icon:"🎚️", name:"Tracks Operator"},
 ];
+/* Immediate controllable in-ear sources (honest concept — not yet routed per role).
+   Future stem categories (Drums/Bass/Keyboards/Guitar/Pads/Talkback/BGV/Lead/Strings…) are shown as a
+   separate PLANNED list in the In-Ears panel and are NOT active sliders — no stems exist yet. */
 const MIXSOURCES=[
-  {id:"track",   name:"Track / Music"},
-  {id:"click",   name:"Click"},
-  {id:"guide",   name:"Guidance"},
-  {id:"cues",    name:"Section prompts"},   // section prompts = Intro / Verse / Chorus / Bridge / Vamp / Outro
-  {id:"pad",     name:"Pad"},
-  {id:"talkback",name:"Talkback"},
+  {id:"track", name:"Music"},
+  {id:"click", name:"Click"},
+  {id:"guide", name:"Guidance"},
 ];
 const ROLE_DEFAULTS={
   leader:{track:60,click:35,guide:25,cues:80,pad:55,talkback:70},
