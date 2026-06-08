@@ -1270,17 +1270,24 @@ function renderSet(){
   const L=$("setList"); L.innerHTML="";
   songs.forEach((so,i)=>{
     const d=document.createElement("div"); d.className="songcard";
+    const hasAudio=!!(so.audio && so.audio.name);
+    const audioStatus = hasAudio
+      ? `<span class="pill" style="border-color:var(--cyan);color:var(--cyan)" title="${so.audio.name}">🎵 Audio attached — ${so.audio.name}</span>`
+      : `<span class="concept-tag">Metadata only — no audio attached yet</span>`;
     d.innerHTML=`<div class="num">${i+1}</div>
       <div class="meta"><div class="t">${so.title||"Untitled"}</div>
-        <div class="d">${so.artist||"—"} · Key ${so.key||"?"} · ${so.bpm||"?"} BPM · ${so.sections.length} sections · ${fmt(songLen(so))}</div></div>
+        <div class="d">${so.artist||"—"} · Key ${so.key||"?"} · ${so.bpm||"?"} BPM · ${so.sections.length} sections · ${fmt(songLen(so))}</div>
+        <div style="margin-top:6px">${audioStatus}</div></div>
       <button class="btn" title="up">▲</button>
       <button class="btn" title="down">▼</button>
+      <button class="btn" title="${hasAudio?'detach audio':'attach the track loaded in In-Ears → Track Test'}">${hasAudio?'Detach':'Attach'}</button>
       <button class="btn" onclick="openSongEditor(${i})">Edit</button>
       <button class="btn red" title="remove">✕</button>`;
-    const [up,dn,,rm]=d.querySelectorAll("button");
+    const [up,dn,att,,rm]=d.querySelectorAll("button");
     up.onclick=()=>{if(i>0){[songs[i-1],songs[i]]=[songs[i],songs[i-1]];renderSet();}};
     dn.onclick=()=>{if(i<songs.length-1){[songs[i+1],songs[i]]=[songs[i],songs[i+1]];renderSet();}};
-    rm.onclick=()=>{if(confirm("Remove "+so.title+"?")){songs.splice(i,1);renderSet();}};
+    att.onclick=()=> hasAudio ? detachAudioFromSong(i) : attachAudioToSong(i);
+    rm.onclick=()=>{if(confirm("Remove "+so.title+"?")){if(so.audio&&so.audio.url){try{URL.revokeObjectURL(so.audio.url);}catch(e){}}songs.splice(i,1);renderSet();}};
     L.appendChild(d);
   });
   $("setTotalLbl").textContent="Total worship time: "+fmt(setTotal());
@@ -1315,8 +1322,27 @@ function saveSong(){
   const so={ title:$("edSongTitle").value.trim(), artist:$("edArtist").value.trim(),
     key:$("edKey").value.trim(), bpm:+$("edBpm").value||0, lyrics:$("edLyrics").value, sections };
   if(!so.title){alert("Please enter a title.");return;}
-  if(editIndex<0) songs.push(so); else songs[editIndex]=so;
+  if(editIndex<0){ songs.push(so); }
+  else { if(songs[editIndex] && songs[editIndex].audio) so.audio=songs[editIndex].audio;   // keep any attached audio across an edit
+         songs[editIndex]=so; }
   closeEditor(); renderSet();
+}
+
+/* ===== Gate 1: browser-local audio attachment for Set Builder songs (status + reference only) =====
+   Attaching stores a session/browser-local object URL on the song. It does NOT make Live Run play the
+   audio yet (that is Gate 2). Object URLs do not survive a page reload — re-attach after refresh. */
+function attachAudioToSong(i){
+  if(!trackLoaded || !trackFile){ alert("Load a track first in In-Ears → Track Test, then Attach it here."); return; }
+  const so=songs[i]; if(!so) return;
+  if(so.audio && so.audio.url){ try{ URL.revokeObjectURL(so.audio.url); }catch(e){} }   // replace cleanly
+  so.audio={ name: trackName || trackFile.name, url: URL.createObjectURL(trackFile), file: trackFile };  // fresh URL → independent of Track Test
+  renderSet(); if($("live") && $("live").classList.contains("active")) renderLive();
+}
+function detachAudioFromSong(i){
+  const so=songs[i]; if(!so || !so.audio) return;
+  if(so.audio.url){ try{ URL.revokeObjectURL(so.audio.url); }catch(e){} }
+  delete so.audio;
+  renderSet(); if($("live") && $("live").classList.contains("active")) renderLive();
 }
 function closeEditor(){$("editorPanel").style.display="none";}
 
@@ -1871,8 +1897,9 @@ function renderLive(){
   songs.forEach((so,i)=>{
     const d=document.createElement("div"); d.className="songcard"+(i===curSong?" cur":"");
     d.style.cursor="pointer";
+    const liveAudio = (so.audio&&so.audio.name) ? ' · 🎵 audio attached' : ' · metadata only';
     d.innerHTML=`<div class="num">${i+1}</div><div class="meta"><div class="t">${so.title}</div>
-      <div class="d">Key ${so.key} · ${so.bpm} BPM · ${fmt(songLen(so))}</div></div>
+      <div class="d">Key ${so.key} · ${so.bpm} BPM · ${fmt(songLen(so))}${liveAudio}</div></div>
       ${i===curSong?'<span class="pill" style="border-color:var(--gold);color:var(--gold)">Song '+(i+1)+' of '+songs.length+'</span>':''}`;
     d.onclick=()=>jumpToSong(i); O.appendChild(d);
   });

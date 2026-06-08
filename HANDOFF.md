@@ -163,6 +163,35 @@ playback remains browser-local — nothing is uploaded or committed.
 
 ---
 
+## J. Gate 1 — Uploaded Audio → Set Builder Attachment Status (2026-06-08)
+
+**What was built:** Set Builder now shows, per song, whether it has audio attached and lets DLG attach
+the track currently loaded in **In-Ears → Track Test** to a chosen Set Builder song.
+- Song objects gained an optional `audio` field: `{ name, url, file }`.
+- Set Builder card shows **"Metadata only — no audio attached yet"** or **"🎵 Audio attached — [filename]"**,
+  with an **Attach** / **Detach** button per song. `saveSong` preserves the attachment across an edit.
+- Live Run order cards show a **read-only** status tag (`🎵 audio attached` / `metadata only`). No Live Run
+  player was built (that is Gate 2).
+
+**What remains metadata-only:** the 3 demo songs (and any song) until DLG attaches audio. Nothing is
+falsely shown as playable.
+
+**Browser-local / session-local:** attachments use `URL.createObjectURL(trackFile)` — **in-memory only**,
+no server upload, no persistence. **Object URLs do not survive a page reload — re-attach after refresh.**
+A fresh object URL is minted per attachment so the In-Ears Track Test "Clear" does not break a song's
+attachment.
+
+**Not touched (verified):** click path (HTMLAudio WAV tick), `optClick`, bar meters, BPM priority,
+Analyze Tempo auto-apply, Track Test controls.
+
+### Gate roadmap
+- **Gate 2 (next):** Live Run attached-audio control — actually play/seek a Set Builder song's attached
+  audio from Live Run (reuse the `iaAudio` / track-control approach; do not touch the click path).
+- **Gate 3:** In-Ears Personal Mix Controls.
+- **Gate 4:** StudioLive 64s hardware integration — **future / hardware-only, not certified** (see §H).
+
+---
+
 ## Commit reference
 
 | Commit | Meaning |
@@ -171,3 +200,4 @@ playback remains browser-local — nothing is uploaded or committed.
 | `5e1c0a9` | Protected checkpoint note (this handoff originated here) |
 | `056c1c4` | Expanded into full project handoff |
 | `6b7be5f` | Core Rehearsal pass + Studio 64s integration-readiness lane |
+| `e6dbcf7` | Uploaded-song visibility + track control (duration, seek, restart, clear) |
