@@ -184,32 +184,57 @@ attachment.
 **Not touched (verified):** click path (HTMLAudio WAV tick), `optClick`, bar meters, BPM priority,
 Analyze Tempo auto-apply, Track Test controls.
 
-## K. Vision Realignment — a loaded song becomes a real Set Builder song (2026-06-08)
+## K. Design Correction — loading a song AUTO-creates a Set Builder song (2026-06-08)
 
-**Why:** Praise is a worship-service / rehearsal / in-ear control layer, not a song list + a separate
-upload tester. The product-correct flow is **load a song → it becomes a real Praise song in the set**,
-not "load into Track Test → attach to an unrelated demo song."
+**Why:** the prior pass still required an extra **"Add to Set Builder"** button. DLG's design: the *sole
+purpose* of loading a song is for it to enter Praise in the right place — so loading should auto-create
+the set song, no extra click.
 
-**What was corrected (primary path):**
-- In-Ears → *Load a Song* panel now has a **primary `➕ Add to Set Builder`** button. With a track loaded
-  it creates a real song: title from the filename (`Pray Together.mp3` → **"Pray Together"**), the audio
-  attached (`{name, url, file}`), `bpm` = detected BPM if available else `0`/"?" (honest, editable),
-  and a default editable section structure. Then it jumps to Set Builder so the song is visible.
-- The new song shows **"🎵 Audio attached — <filename>"**; demo/empty songs still show
-  **"Metadata only — no audio attached yet."**
-- **Attach / Detach (Gate 1) is now secondary** — still available to attach a loaded track to an
-  *existing* song, but no longer the primary design.
+**What was corrected:**
+- **`loadTrack()` now auto-creates the song.** Choose a file → Praise immediately makes a real Set Builder
+  song: title from filename (`Pray Together.mp3` → **"Pray Together"**), audio attached (`{name, url, file}`),
+  `bpm` = detected BPM if available else `0`/"?" (honest, editable; detected BPM still drives the click
+  separately), default editable sections. The In-Ears panel is now **"Load a Song"** with preview controls.
+- **The "Add to Set Builder" button was removed** (no longer needed).
+- **Duplicate guard:** loading the *same* file (matched by name + size + lastModified) reuses the existing
+  set song and refreshes its URL instead of creating a duplicate.
+- **Attach / Detach (Gate 1) remains secondary** for attaching a loaded track to an *existing* song.
 
-**Still browser/session-local:** attachments use `URL.createObjectURL` (in-memory, no upload, no
-persistence). **Re-add after a page reload.** Removing a song revokes its object URL.
+**Still browser/session-local:** `URL.createObjectURL` (in-memory, no upload, no persistence).
+**Re-load after a page reload.** Removing a song revokes its object URL.
 
 **Still NOT connected (next lane):** a set song's attached audio **does not yet play from Live Run**
 (Live Run shows it in the order with read-only audio status). That is **Gate 2**.
 
+## L. Demo songs removed from the active set (2026-06-08)
+
+The 3 hard-coded demo songs (Way Maker, Goodness of God, Great Are You Lord — metadata-only, no audio)
+were **removed** so the Set Builder only holds real loaded songs and nothing looks playable when it
+isn't. `songs` now starts **empty**; the app already guards an empty set (Start alerts "Add a song
+first"). The earlier example data remains in git history (pre-`73…`/this commit) if needed for dev.
+
+## M. Lyrics — honest field exists; future lane
+
+Songs already carry a manual **`lyrics`** field (editable in the song editor — `edLyrics`). Lyrics are
+**not** fetched/scraped (no fake retrieval). Future lyric lane: paste/import lyrics → align lyrics to
+sections → display lyrics in Live Run.
+
+## N. Roles + Personal Mix roadmap (no fake stems)
+
+**Roles** (In-Ears `ROLES`) now include **Organist**: Worship Leader · Drummer · Bass · Keys ·
+**Organist** · Guitar · BGV · Tracks Operator. **Guidance** is the main word (the mix source formerly
+"Guide" is now **"Guidance"**; "Cues" is now **"Section prompts"** = Intro/Verse/Chorus/Bridge/Vamp/Outro).
+
+**Personal Mix (In-Ears) — concept only, not built as real audio yet:**
+- **Immediate target:** each role controls **Music / Click / Guidance** levels.
+- **Future (after real stem breakdown):** Drums, Bass, Keyboards, Guitar, Pads, Click, Guide, Talkback,
+  Background Vocals, Lead. **No stems exist yet — do not claim stems are available until actually built.**
+- **Future:** an "Add custom instrument/category" control (e.g. strings/violin) for sources not listed.
+
 ### Gate roadmap
 - **Gate 2 (next):** Live Run selected-song playback/control — play/seek a set song's attached audio from
   Live Run (reuse the `iaAudio` / track-control approach; **do not touch the click path**).
-- **Gate 3:** In-Ears Personal Mix Controls (per-role Music/Click/Guide levels).
+- **Gate 3:** In-Ears Personal Mix Controls (immediate: per-role Music/Click/Guidance; stems later).
 - **Gate 4:** StudioLive 64s hardware integration — **future / hardware-only, not certified** (see §H).
 
 ---
@@ -224,3 +249,4 @@ persistence). **Re-add after a page reload.** Removing a song revokes its object
 | `6b7be5f` | Core Rehearsal pass + Studio 64s integration-readiness lane |
 | `e6dbcf7` | Uploaded-song visibility + track control (duration, seek, restart, clear) |
 | `c69ddb7` | Gate 1 — uploaded audio → Set Builder attachment status |
+| `32e3da9` | Realign — loaded song becomes a Set Builder song (via Add button) |

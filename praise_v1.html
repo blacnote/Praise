@@ -929,15 +929,11 @@
         <!-- TRACK TEST -->
         <div class="panel">
           <div class="eyebrow">Load a Song <span class="concept-tag">Local · browser only</span></div>
-          <strong style="font-size:15px">Load a song, then add it to the worship set</strong>
-          <div class="small" style="margin:8px 0 12px">Choose a local audio file, then <b>➕ Add to Set Builder</b> to make it
-            a real Praise song (title comes from the filename). You can also test playback below. Browser-local only —
-            nothing is uploaded or stored; re-add after a page reload.</div>
+          <strong style="font-size:15px">Load a song — it becomes a worship-set song automatically</strong>
+          <div class="small" style="margin:8px 0 12px">Choose a local audio file and Praise <b>automatically creates a real song</b>
+            in the Set Builder (title from the filename, audio attached). Preview playback below. Browser-local only —
+            nothing is uploaded or stored; re-load after a page reload.</div>
           <input type="file" id="iaTrackFile" accept="audio/*" onchange="loadTrack(event)">
-          <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap">
-            <button class="btn gold" id="iaAddSongBtn" onclick="addLoadedTrackAsSong()" disabled>➕ Add to Set Builder</button>
-            <span class="small" style="color:var(--ink-dim)">Creates a new song in the set with this audio attached.</span>
-          </div>
           <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap">
             <button class="btn cyan" onclick="trackPlay()">▶ Play Track</button>
             <button class="btn" onclick="trackPauseTrack()">⏸ Pause</button>
@@ -1081,8 +1077,9 @@
       <div class="route"><div class="ic">🎙️</div><div class="nm">Worship Leader</div><span class="pill">Guide low · vocal-led · Spirit Flow cues</span></div>
       <div class="route"><div class="ic">🥁</div><div class="nm">Drummer</div><span class="pill">Click strong · tight rhythm</span></div>
       <div class="route"><div class="ic">🎸</div><div class="nm">Bass</div><span class="pill">Click + kick · root anchor</span></div>
-      <div class="route"><div class="ic">🎹</div><div class="nm">Keys</div><span class="pill">Pads + guide · section cues</span></div>
-      <div class="route"><div class="ic">🎶</div><div class="nm">Guitar</div><span class="pill">Click + arrangement cues</span></div>
+      <div class="route"><div class="ic">🎹</div><div class="nm">Keys</div><span class="pill">Pads + guidance · section prompts</span></div>
+      <div class="route"><div class="ic">🎼</div><div class="nm">Organist</div><span class="pill">Sustained pads + guidance</span></div>
+      <div class="route"><div class="ic">🎶</div><div class="nm">Guitar</div><span class="pill">Click + arrangement prompts</span></div>
       <div class="route"><div class="ic">🎵</div><div class="nm">BGV</div><span class="pill">Guide + lead reference</span></div>
       <div class="route"><div class="ic">🎚️</div><div class="nm">Tracks Operator</div><span class="pill">Full mix · click · all cues</span></div>
       <div class="hint" style="margin-top:12px">
@@ -1243,17 +1240,7 @@ function enterApp(){
 
 /* ===================== DATA MODEL ===================== */
 const SECPRESETS = ["Intro","Verse 1","Chorus","Verse 2","Bridge","Vamp","Outro","Tag","Ending"];
-let songs = [
-  { title:"Way Maker", artist:"Sinach", key:"E", bpm:69, lyrics:"You are here, moving in our midst...",
-    sections:[{n:"Intro",s:16},{n:"Verse 1",s:30},{n:"Chorus",s:34},{n:"Verse 2",s:30},
-              {n:"Chorus",s:34},{n:"Bridge",s:40},{n:"Vamp",s:30},{n:"Outro",s:18}] },
-  { title:"Goodness of God", artist:"Bethel", key:"Ab", bpm:63, lyrics:"I love You, Lord...",
-    sections:[{n:"Intro",s:14},{n:"Verse 1",s:32},{n:"Chorus",s:30},{n:"Verse 2",s:32},
-              {n:"Bridge",s:44},{n:"Chorus",s:30},{n:"Outro",s:16}] },
-  { title:"Great Are You Lord", artist:"All Sons & Daughters", key:"G", bpm:72, lyrics:"You give life...",
-    sections:[{n:"Intro",s:12},{n:"Verse 1",s:28},{n:"Chorus",s:30},{n:"Bridge",s:38},
-              {n:"Vamp",s:28},{n:"Ending",s:14}] },
-];
+let songs = [];   // real songs are created by loading audio (In-Ears → Load a Song). Demo/metadata songs removed so the set only holds real songs — earlier examples remain in git history (see HANDOFF §L).
 
 /* ===================== HELPERS ===================== */
 const $=id=>document.getElementById(id);
@@ -1349,26 +1336,32 @@ function detachAudioFromSong(i){
   delete so.audio;
   renderSet(); if($("live") && $("live").classList.contains("active")) renderLive();
 }
-/* PRIMARY path: a loaded song becomes a real Praise song in the worship set
+/* PRIMARY path: loading a song automatically makes it a real Praise song in the worship set
    ("Pray Together.mp3" → set song "Pray Together" with its audio attached). Browser/session-local. */
 function titleFromFilename(name){
   return (name||"").replace(/\.[^.]+$/,"").replace(/[_-]+/g," ").replace(/\s+/g," ").trim() || "Untitled Song";
 }
-function addLoadedTrackAsSong(){
-  if(!trackLoaded || !trackFile){ alert("Choose a local audio file above first, then Add to Set Builder."); return; }
+function sameFile(audio, f){
+  return !!(audio && audio.file && f && audio.file.name===f.name && audio.file.size===f.size && audio.file.lastModified===f.lastModified);
+}
+function autoCreateSongFromTrack(){
+  if(!trackLoaded || !trackFile) return;
+  // duplicate guard: if a set song already holds this exact file, reuse it (refresh its URL) instead of duplicating
+  const existing = songs.findIndex(s=> sameFile(s.audio, trackFile));
+  if(existing>=0){
+    const s=songs[existing];
+    if(s.audio && s.audio.url){ try{ URL.revokeObjectURL(s.audio.url); }catch(e){} }
+    s.audio.url=URL.createObjectURL(trackFile); s.audio.file=trackFile;
+    renderSet(); if($("live")) renderLive(); return;
+  }
   const fname=trackName || trackFile.name;
   const so={
-    title: titleFromFilename(fname), artist:"", key:"", bpm: detectedBpm||0, lyrics:"",   // bpm 0 → shows "?" (honest, editable); detected BPM used if available
+    title: titleFromFilename(fname), artist:"", key:"", bpm: detectedBpm||0, lyrics:"",   // bpm 0 → shows "?" (honest, editable); detected BPM applies to the click separately
     sections:[{n:"Intro",s:16},{n:"Verse 1",s:30},{n:"Chorus",s:32}],                       // default editable structure
-    audio:{ name:fname, url:URL.createObjectURL(trackFile), file:trackFile }                // fresh URL → independent of Track Test element
+    audio:{ name:fname, url:URL.createObjectURL(trackFile), file:trackFile }                // fresh URL → independent of the preview element
   };
   songs.push(so);
   renderSet(); if($("live")) renderLive();
-  // bring DLG to Set Builder to see the new song (uses the existing view-switch structure)
-  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
-  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
-  const nb=document.querySelector('nav button[data-view="set"]'); if(nb) nb.classList.add("active");
-  if($("set")) $("set").classList.add("active");
 }
 function closeEditor(){$("editorPanel").style.display="none";}
 
@@ -1648,6 +1641,7 @@ const ROLES=[
   {id:"drums",  icon:"🥁", name:"Drummer"},
   {id:"bass",   icon:"🎸", name:"Bass"},
   {id:"keys",   icon:"🎹", name:"Keys"},
+  {id:"organ",  icon:"🎼", name:"Organist"},
   {id:"guitar", icon:"🎶", name:"Guitar"},
   {id:"bgv",    icon:"🎵", name:"BGV"},
   {id:"tracks", icon:"🎚️", name:"Tracks Operator"},
@@ -1655,8 +1649,8 @@ const ROLES=[
 const MIXSOURCES=[
   {id:"track",   name:"Track / Music"},
   {id:"click",   name:"Click"},
-  {id:"guide",   name:"Guide"},
-  {id:"cues",    name:"Cues"},
+  {id:"guide",   name:"Guidance"},
+  {id:"cues",    name:"Section prompts"},   // section prompts = Intro / Verse / Chorus / Bridge / Vamp / Outro
   {id:"pad",     name:"Pad"},
   {id:"talkback",name:"Talkback"},
 ];
@@ -1665,6 +1659,7 @@ const ROLE_DEFAULTS={
   drums: {track:65,click:95,guide:40,cues:70,pad:20,talkback:60},
   bass:  {track:70,click:85,guide:35,cues:65,pad:30,talkback:55},
   keys:  {track:60,click:55,guide:50,cues:75,pad:80,talkback:55},
+  organ: {track:58,click:50,guide:50,cues:75,pad:75,talkback:55},
   guitar:{track:68,click:70,guide:45,cues:70,pad:40,talkback:55},
   bgv:   {track:55,click:45,guide:85,cues:75,pad:50,talkback:65},
   tracks:{track:80,click:75,guide:70,cues:80,pad:60,talkback:75},
@@ -1737,11 +1732,11 @@ function loadTrack(e){
   if($("iaAnalyzeBtn")) $("iaAnalyzeBtn").disabled=false;
   if($("iaRestartBtn")) $("iaRestartBtn").disabled=false;
   if($("iaClearBtn")) $("iaClearBtn").disabled=false;
-  if($("iaAddSongBtn")) $("iaAddSongBtn").disabled=false;
   const sk=$("iaSeek"); if(sk){ sk.disabled=false; sk.value=0; sk.max=0; }
   if($("iaTrackTime")) $("iaTrackTime").textContent="0:00 / 0:00";   // real duration fills in on loadedmetadata
   manualBpm=null; const mi=$("manualBpmInput"); if(mi) mi.value="";   // new file: clear overrides → back to planned until analyzed
   applyTempoChange();
+  autoCreateSongFromTrack();   // loading a song = it enters the worship set automatically
   updateEars();
 }
 
@@ -1783,7 +1778,6 @@ function clearTrack(){
   const sk=$("iaSeek"); if(sk){ sk.value=0; sk.max=0; sk.disabled=true; }
   if($("iaRestartBtn")) $("iaRestartBtn").disabled=true;
   if($("iaClearBtn")) $("iaClearBtn").disabled=true;
-  if($("iaAddSongBtn")) $("iaAddSongBtn").disabled=true;
   if($("iaAnalyzeBtn")) $("iaAnalyzeBtn").disabled=true;   // analyze stays disabled until another file is loaded
   applyTempoChange();   // click-source label back to Manual/Planned (detected cleared); manual override left intact
   updateEars();
