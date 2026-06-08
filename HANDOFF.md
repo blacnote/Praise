@@ -184,10 +184,32 @@ attachment.
 **Not touched (verified):** click path (HTMLAudio WAV tick), `optClick`, bar meters, BPM priority,
 Analyze Tempo auto-apply, Track Test controls.
 
+## K. Vision Realignment — a loaded song becomes a real Set Builder song (2026-06-08)
+
+**Why:** Praise is a worship-service / rehearsal / in-ear control layer, not a song list + a separate
+upload tester. The product-correct flow is **load a song → it becomes a real Praise song in the set**,
+not "load into Track Test → attach to an unrelated demo song."
+
+**What was corrected (primary path):**
+- In-Ears → *Load a Song* panel now has a **primary `➕ Add to Set Builder`** button. With a track loaded
+  it creates a real song: title from the filename (`Pray Together.mp3` → **"Pray Together"**), the audio
+  attached (`{name, url, file}`), `bpm` = detected BPM if available else `0`/"?" (honest, editable),
+  and a default editable section structure. Then it jumps to Set Builder so the song is visible.
+- The new song shows **"🎵 Audio attached — <filename>"**; demo/empty songs still show
+  **"Metadata only — no audio attached yet."**
+- **Attach / Detach (Gate 1) is now secondary** — still available to attach a loaded track to an
+  *existing* song, but no longer the primary design.
+
+**Still browser/session-local:** attachments use `URL.createObjectURL` (in-memory, no upload, no
+persistence). **Re-add after a page reload.** Removing a song revokes its object URL.
+
+**Still NOT connected (next lane):** a set song's attached audio **does not yet play from Live Run**
+(Live Run shows it in the order with read-only audio status). That is **Gate 2**.
+
 ### Gate roadmap
-- **Gate 2 (next):** Live Run attached-audio control — actually play/seek a Set Builder song's attached
-  audio from Live Run (reuse the `iaAudio` / track-control approach; do not touch the click path).
-- **Gate 3:** In-Ears Personal Mix Controls.
+- **Gate 2 (next):** Live Run selected-song playback/control — play/seek a set song's attached audio from
+  Live Run (reuse the `iaAudio` / track-control approach; **do not touch the click path**).
+- **Gate 3:** In-Ears Personal Mix Controls (per-role Music/Click/Guide levels).
 - **Gate 4:** StudioLive 64s hardware integration — **future / hardware-only, not certified** (see §H).
 
 ---
@@ -201,3 +223,4 @@ Analyze Tempo auto-apply, Track Test controls.
 | `056c1c4` | Expanded into full project handoff |
 | `6b7be5f` | Core Rehearsal pass + Studio 64s integration-readiness lane |
 | `e6dbcf7` | Uploaded-song visibility + track control (duration, seek, restart, clear) |
+| `c69ddb7` | Gate 1 — uploaded audio → Set Builder attachment status |

@@ -928,11 +928,16 @@
 
         <!-- TRACK TEST -->
         <div class="panel">
-          <div class="eyebrow">Track Test <span class="concept-tag">Local · browser only</span></div>
-          <strong style="font-size:15px">Load a local track to test</strong>
-          <div class="small" style="margin:8px 0 12px">Local browser playback for testing only. Nothing is uploaded
-            or committed, and there is no separate-output routing yet — the track plays on your default browser output.</div>
+          <div class="eyebrow">Load a Song <span class="concept-tag">Local · browser only</span></div>
+          <strong style="font-size:15px">Load a song, then add it to the worship set</strong>
+          <div class="small" style="margin:8px 0 12px">Choose a local audio file, then <b>➕ Add to Set Builder</b> to make it
+            a real Praise song (title comes from the filename). You can also test playback below. Browser-local only —
+            nothing is uploaded or stored; re-add after a page reload.</div>
           <input type="file" id="iaTrackFile" accept="audio/*" onchange="loadTrack(event)">
+          <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="btn gold" id="iaAddSongBtn" onclick="addLoadedTrackAsSong()" disabled>➕ Add to Set Builder</button>
+            <span class="small" style="color:var(--ink-dim)">Creates a new song in the set with this audio attached.</span>
+          </div>
           <div class="row" style="margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap">
             <button class="btn cyan" onclick="trackPlay()">▶ Play Track</button>
             <button class="btn" onclick="trackPauseTrack()">⏸ Pause</button>
@@ -1344,6 +1349,27 @@ function detachAudioFromSong(i){
   delete so.audio;
   renderSet(); if($("live") && $("live").classList.contains("active")) renderLive();
 }
+/* PRIMARY path: a loaded song becomes a real Praise song in the worship set
+   ("Pray Together.mp3" → set song "Pray Together" with its audio attached). Browser/session-local. */
+function titleFromFilename(name){
+  return (name||"").replace(/\.[^.]+$/,"").replace(/[_-]+/g," ").replace(/\s+/g," ").trim() || "Untitled Song";
+}
+function addLoadedTrackAsSong(){
+  if(!trackLoaded || !trackFile){ alert("Choose a local audio file above first, then Add to Set Builder."); return; }
+  const fname=trackName || trackFile.name;
+  const so={
+    title: titleFromFilename(fname), artist:"", key:"", bpm: detectedBpm||0, lyrics:"",   // bpm 0 → shows "?" (honest, editable); detected BPM used if available
+    sections:[{n:"Intro",s:16},{n:"Verse 1",s:30},{n:"Chorus",s:32}],                       // default editable structure
+    audio:{ name:fname, url:URL.createObjectURL(trackFile), file:trackFile }                // fresh URL → independent of Track Test element
+  };
+  songs.push(so);
+  renderSet(); if($("live")) renderLive();
+  // bring DLG to Set Builder to see the new song (uses the existing view-switch structure)
+  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+  const nb=document.querySelector('nav button[data-view="set"]'); if(nb) nb.classList.add("active");
+  if($("set")) $("set").classList.add("active");
+}
 function closeEditor(){$("editorPanel").style.display="none";}
 
 /* ===================== AUDIO ENGINE ===================== */
@@ -1711,6 +1737,7 @@ function loadTrack(e){
   if($("iaAnalyzeBtn")) $("iaAnalyzeBtn").disabled=false;
   if($("iaRestartBtn")) $("iaRestartBtn").disabled=false;
   if($("iaClearBtn")) $("iaClearBtn").disabled=false;
+  if($("iaAddSongBtn")) $("iaAddSongBtn").disabled=false;
   const sk=$("iaSeek"); if(sk){ sk.disabled=false; sk.value=0; sk.max=0; }
   if($("iaTrackTime")) $("iaTrackTime").textContent="0:00 / 0:00";   // real duration fills in on loadedmetadata
   manualBpm=null; const mi=$("manualBpmInput"); if(mi) mi.value="";   // new file: clear overrides → back to planned until analyzed
@@ -1756,6 +1783,7 @@ function clearTrack(){
   const sk=$("iaSeek"); if(sk){ sk.value=0; sk.max=0; sk.disabled=true; }
   if($("iaRestartBtn")) $("iaRestartBtn").disabled=true;
   if($("iaClearBtn")) $("iaClearBtn").disabled=true;
+  if($("iaAddSongBtn")) $("iaAddSongBtn").disabled=true;
   if($("iaAnalyzeBtn")) $("iaAnalyzeBtn").disabled=true;   // analyze stays disabled until another file is loaded
   applyTempoChange();   // click-source label back to Manual/Planned (detected cleared); manual override left intact
   updateEars();
